@@ -5,35 +5,7 @@
 #define WIDTH 150
 #define HALF_WIDTH (WIDTH/2)
 
-//void printTree(Node *tree, int maxLvl);
 
-/*void traversalTree(std::vector<std::string>& v, Node* tree, int lvl, int i1, int maxLvl = 0) {
-
-    if (maxLvl != 0 && lvl >= maxLvl) {
-        return;
-    }
-    std::string val = std::to_string(tree->value);
-    int valSize = val.length();
-    int curPos = i1;
-    if (i1 - (valSize / 2) >= 0)
-        curPos = i1 - valSize / 2;
-    for (size_t i = curPos, j = 0; i < curPos + val.size(); i++, j++)
-        v[lvl * 2][i] = val[j];
-    int diff;
-    if (tree->left != nullptr) {
-        diff = HALF_WIDTH / pow(2, lvl);
-        v[(lvl * 2) + 1][curPos + (valSize / 2) - diff / 2] = '/';
-        traversalTree(v, tree->left, lvl + 1, i1 - diff, maxLvl);
-
-    }
-    if (tree->right != nullptr) {
-        diff = HALF_WIDTH / pow(2, lvl);
-        v[(lvl * 2) + 1][curPos + (valSize / 2) + diff / 2] = '\\';
-        traversalTree(v, tree->right, lvl + 1, i1 + diff, maxLvl);
-    }
-    return;
-}
-*/
 
 void heightTree(Node* tree, int lvl, int* max) {
     if (*max < lvl)
@@ -47,27 +19,10 @@ void heightTree(Node* tree, int lvl, int* max) {
     return;
 }
 
-/*void printTree(Node *tree, int maxLvl) {
-    if (tree == NULL) {
-        printf("");
-        //std::cout << std::string(HALF_WIDTH, ' ') << "nill" << std::endl;
-        return;
-    }
-    int height = maxLvl;
-    if (height == 0)
-        heightTree(tree, 0, &height);
-    std::vector<std::string> pic((height + 1) * 2 + 1, std::string(WIDTH, ' '));
-    traversalTree(pic, tree, 1, HALF_WIDTH, maxLvl);
-    for (size_t i = 0; i < pic.size(); i++) {
-        printf("");
-        //std::cout << pic[i] << std::endl;
-    }
-}
-*/
 
 int main()
 {
-    Node *node = NULL;
+    Node *root = NIL;
     FILE *in = fopen("input.txt", "rt");
     if(in == NULL )
     {
@@ -82,17 +37,25 @@ int main()
 
     int count = 0;
     while((count = fscanf(in, "%c,%d,%c,%d,%f", &c_type, &uniq_number, &c_side, &qty, &price)) != EOF) {
-        Node *n;
+        PriceData *n = NULL;
+        n = (PriceData*)malloc(sizeof (PriceData));
 
         if(count == 5) {
-            printf("type:%c N=%d side:%c qty=%d price=%f\n", c_type, uniq_number, c_side, qty, price);
-            insertNode(price);
+            //printf("type:%c N=%d side:%c qty=%d price=%f\n", c_type, uniq_number, c_side, qty, price);
+            n->price = price;
+            root = insertNode(root, *n);
         } else if(count == 2) {
-            printf("type:%c N=%d\n", c_type, uniq_number);
+            //printf("type:%c N=%d\n", c_type, uniq_number);
         }
     }
     int max = 0;
     heightTree(root, 0, &max);
+    PriceData *p = (PriceData*)malloc(sizeof(PriceData));
+    p->price = 250.61;
+    Node *n = NIL;
+    n = findNode(root, *p);
+    if(n != NULL)
+        printf("%f\n",n->data.price);
     printf("Max=%d\nEnd of file!\n", max);
     fclose(in);
     return 0;

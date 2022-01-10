@@ -6,29 +6,49 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include "PriceLevel.h"
 
 
-typedef float T;                  /* type of item to be stored */
-#define compLT(a,b) (a < b)
-#define compEQ(a,b) (a == b)
+
+//typedef float T;                  /* type of item to be stored */
+//#define compLT(a,b) (a < b)
+//#define compEQ(a,b) (a == b)
+
+int comp_npack(Order a, Order b) {
+    return a.num_pack < b.num_pack;
+}
 
 /* Red-Black tree description */
 typedef enum { BLACK, RED } nodeColor;
+
+typedef struct PriceLvl_ {
+    float price;
+    PriceLevel price_lvl;
+    int size;
+} PriceData;
 
 typedef struct Node_ {
     struct Node_ *left;         /* left child */
     struct Node_ *right;        /* right child */
     struct Node_ *parent;       /* parent */
     nodeColor color;            /* node color (BLACK, RED) */
-    T data;                     /* data stored in node */
+    PriceData data;                     /* data stored in node */
 } Node;
+
+int compLT(PriceData a, PriceData b) {
+    return a.price < b.price;
+}
+
+int compEQ(PriceData a, PriceData b) {
+    return a.price == b.price;
+}
 
 #define NIL &sentinel           /* all leafs are sentinels */
 Node sentinel = { NIL, NIL, 0, BLACK, 0};
 
-Node *root = NIL;               /* root of Red-Black tree */
+//Node *root = NIL;               /* root of Red-Black tree */
 
-void rotateLeft(Node *x) {
+void rotateLeft(Node *root, Node *x) {
 
    /**************************
     *  rotate node x to left *
@@ -56,7 +76,7 @@ void rotateLeft(Node *x) {
     if (x != NIL) x->parent = y;
 }
 
-void rotateRight(Node *x) {
+void rotateRight(Node *root, Node *x) {
 
    /****************************
     *  rotate node x to right  *
@@ -84,7 +104,7 @@ void rotateRight(Node *x) {
     if (x != NIL) x->parent = y;
 }
 
-void insertFixup(Node *x) {
+void insertFixup(Node *root, Node *x) {
 
    /*************************************
     *  maintain Red-Black tree balance  *
@@ -109,13 +129,13 @@ void insertFixup(Node *x) {
                 if (x == x->parent->right) {
                     /* make x a left child */
                     x = x->parent;
-                    rotateLeft(x);
+                    rotateLeft(root, x);
                 }
 
                 /* recolor and rotate */
                 x->parent->color = BLACK;
                 x->parent->parent->color = RED;
-                rotateRight(x->parent->parent);
+                rotateRight(root, x->parent->parent);
             }
         } else {
 
@@ -133,18 +153,18 @@ void insertFixup(Node *x) {
                 /* uncle is BLACK */
                 if (x == x->parent->left) {
                     x = x->parent;
-                    rotateRight(x);
+                    rotateRight(root, x);
                 }
                 x->parent->color = BLACK;
                 x->parent->parent->color = RED;
-                rotateLeft(x->parent->parent);
+                rotateLeft(root, x->parent->parent);
             }
         }
     }
     root->color = BLACK;
 }
 
-Node *insertNode(T data) {
+Node *insertNode(Node *root, PriceData data) {
     Node *current, *parent, *x;
 
    /***********************************************
@@ -155,7 +175,17 @@ Node *insertNode(T data) {
     current = root;
     parent = 0;
     while (current != NIL) {
-        if (compEQ(data, current->data)) return (current);
+        if (compEQ(data, current->data)) {
+            PriceLevel *priceLevel = (PriceLevel*) malloc(sizeof(PriceLevel));
+            push_back( current->data.price_lvl, data.
+            Order *ord = (Order*)current->data.ord;
+            for(int i = 0; i < current->data.size; i++, ord++) {
+                qsort(ord, current->data.size, sizeof(Order), (int(*)(const void*, const void*)) comp_npack);
+            }
+            // TODO
+            // update list PriceData
+            return (current);
+        }
         parent = current;
         current = compLT(data, current->data) ?
             current->left : current->right;
@@ -182,11 +212,11 @@ Node *insertNode(T data) {
         root = x;
     }
 
-    insertFixup(x);
+    insertFixup(root, x);
     return(x);
 }
 
-void deleteFixup(Node *x) {
+void deleteFixup(Node *root, Node *x) {
 
    /*************************************
     *  maintain Red-Black tree balance  *
@@ -199,7 +229,7 @@ void deleteFixup(Node *x) {
             if (w->color == RED) {
                 w->color = BLACK;
                 x->parent->color = RED;
-                rotateLeft (x->parent);
+                rotateLeft (root, x->parent);
                 w = x->parent->right;
             }
             if (w->left->color == BLACK && w->right->color == BLACK) {
@@ -209,13 +239,13 @@ void deleteFixup(Node *x) {
                 if (w->right->color == BLACK) {
                     w->left->color = BLACK;
                     w->color = RED;
-                    rotateRight (w);
+                    rotateRight (root, w);
                     w = x->parent->right;
                 }
                 w->color = x->parent->color;
                 x->parent->color = BLACK;
                 w->right->color = BLACK;
-                rotateLeft (x->parent);
+                rotateLeft (root, x->parent);
                 x = root;
             }
         } else {
@@ -223,7 +253,7 @@ void deleteFixup(Node *x) {
             if (w->color == RED) {
                 w->color = BLACK;
                 x->parent->color = RED;
-                rotateRight (x->parent);
+                rotateRight (root, x->parent);
                 w = x->parent->left;
             }
             if (w->right->color == BLACK && w->left->color == BLACK) {
@@ -233,13 +263,13 @@ void deleteFixup(Node *x) {
                 if (w->left->color == BLACK) {
                     w->right->color = BLACK;
                     w->color = RED;
-                    rotateLeft (w);
+                    rotateLeft (root, w);
                     w = x->parent->left;
                 }
                 w->color = x->parent->color;
                 x->parent->color = BLACK;
                 w->left->color = BLACK;
-                rotateRight (x->parent);
+                rotateRight (root, x->parent);
                 x = root;
             }
         }
@@ -247,14 +277,14 @@ void deleteFixup(Node *x) {
     x->color = BLACK;
 }
 
-void deleteNode(Node *z) {
+void deleteNode(Node *root, Node *z) {
     Node *x, *y;
 
    /*****************************
     *  delete node z from tree  *
     *****************************/
 
-    if (!z || z == NIL) return;
+    if (!z || z == NIL) return ;
 
 
     if (z->left == NIL || z->right == NIL) {
@@ -286,12 +316,12 @@ void deleteNode(Node *z) {
 
 
     if (y->color == BLACK)
-        deleteFixup (x);
+        deleteFixup (root, x);
 
     free (y);
 }
 
-Node *findNode(T data) {
+Node *findNode(Node *root, PriceData data) {
 
    /*******************************
     *  find node containing data  *
