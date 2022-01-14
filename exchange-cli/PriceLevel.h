@@ -35,6 +35,8 @@ void push_back(PriceLevel *list, Order *value) {
         printf("error malloc:");
         exit(EXIT_FAILURE);
     }
+//    if(list->size > 0)
+//        printf("stop");
 
     tmp->next = NULL;
     tmp->value = value;
@@ -43,6 +45,8 @@ void push_back(PriceLevel *list, Order *value) {
     if (list->head == NULL) {
         list->head = tmp;
     }
+    if(list->tail == NULL)
+        list->tail = tmp;
     list->size++;
 }
 
@@ -66,16 +70,19 @@ Order* pop_front(PriceLevel *list) {
 }
 
 void fun(Order *ord) {
-    printf("ord=");
+    printf("price=%f\tnumber=%d\t\tqty=%d", ord->price, ord->num_pack, ord->qty);
 }
 
-void printList(PriceLevel *list, void (*fun)(void *)) {
+void printList(PriceLevel *list) {
+    if(list->size > 1)
+        printf("");
     OrderLevel *iter = list->head;
     while (iter) {
         fun(iter->value);
         iter = iter->next;
+        printf("\n");
+        fflush(stdout);
     }
-    printf("\n");
 }
 
 #endif // PRICELEVEL_H

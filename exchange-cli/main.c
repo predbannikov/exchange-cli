@@ -2,9 +2,6 @@
 #include <stdlib.h>
 #include "Node.h"
 
-#define WIDTH 150
-#define HALF_WIDTH (WIDTH/2)
-
 
 
 void heightTree(Node* tree, int lvl, int* max) {
@@ -19,9 +16,19 @@ void heightTree(Node* tree, int lvl, int* max) {
     return;
 }
 
+float macheps(void)
+{
+    float e = 1.0f;
+
+    while (1.0f + e / 2.0f > 1.0f)
+        e /= 2.0f;
+    return e;
+}
+
 
 int main()
 {
+    unsigned int trade_id = 0;
     FILE *in = fopen("input.txt", "rt");
     if(in == NULL )
     {
@@ -37,16 +44,98 @@ int main()
     int count = 0;
     Node* bye_glass = NIL;
     Node* sell_glass = NIL;
+    max_bye = 0;
+    max_sell = 1000000;
+    const float eps = macheps();
     while((count = fscanf(in, "%c,%d,%c,%d,%f", &c_type, &uniq_number, &c_side, &qty, &price)) != EOF) {
         PriceData *n = NULL;
         n = (PriceData*)malloc(sizeof (PriceData));
 
         n->price = price;
+        n->number_pack = uniq_number;
+        n->qty = qty;
+        n->side = c_side;
         if(count == 5) {
-            if(c_side == 'B')
-                insertNode(&bye_glass, *n);
-            else
-                insertNode(&sell_glass, *n);
+            if(c_side == 'B') {
+                Node* tmp = sell_glass;
+                while(tmp->left != NIL)
+                    tmp = tmp->left;
+                while(tmp->data.price >= price && tmp != NIL && n->qty != 0) {	// Если есть покупатели то выполняем сделки
+                    OrderLevel *orders = tmp->data.price_level->head;	// Получаем первый в очереди ордер на покупку
+                    while(orders != NULL) {	// Обходим очередь или выход из цикла по break
+                        if(orders->value->qty > n->qty) {
+                            // Ордер который прилетел закрыт
+                            orders->value->qty -= n->qty;
+                            printf("T,%u,%c,%d,%d,%d,%f\n", trade_id, 'B', orders->value->num_pack, n->number_pack, n->qty, n->price);
+                            trade_id++;
+                            n->qty = 0;
+                            // TODO Отправляем сделки
+                            break;
+                        } else if(orders->value->qty < n->qty) {
+                            n->qty -= orders->value->qty;
+                            pop_front(tmp->data.price_level);
+                            orders = tmp->data.price_level->head;
+                            // Ордер который был в стакане закрыт
+                        } else {
+                            pop_front(tmp->data.price_level);
+                            orders = tmp->data.price_level->head;
+                            n->qty = 0;
+                            // Оба ордера закрыты
+                        }
+                    }
+                    if(tmp->data.price_level->size == 0)
+                        deleteNode(&sell_glass, tmp);
+                    if(n->qty != 0) {
+                        tmp = sell_glass;
+                        while(tmp->left != NIL)
+                            tmp = tmp->left;
+                        if(tmp == NIL)
+                            break;
+                    }
+                }
+                if(n->qty != 0)
+                    //printf("Orders bye closed");// Исполняем ордер выходим
+                    insertNode(&bye_glass, *n);
+            } else {
+                // Ордер на продажу
+                Node* tmp = bye_glass;	// самая высокая цена на покупку
+                while(tmp->right != NIL)
+                    tmp = tmp->right;
+                while(tmp->data.price >= price && tmp != NIL && n->qty != 0) {	// Если есть покупатели то выполняем сделки
+                    OrderLevel *orders = tmp->data.price_level->head;	// Получаем первый в очереди ордер на покупку
+                    while(orders != NULL) {	// Обходим очередь или выход из цикла по break
+                        if(orders->value->qty > n->qty) {
+                            // Ордер который прилетел закрыт
+                            orders->value->qty -= n->qty;
+                            n->qty = 0;
+                            // TODO Отправляем сделки
+                            break;
+                        } else if(orders->value->qty < n->qty) {
+                            n->qty -= orders->value->qty;
+                            pop_front(tmp->data.price_level);
+                            orders = tmp->data.price_level->head;
+                            // Ордер который был в стакане закрыт
+                        } else {
+                            pop_front(tmp->data.price_level);
+                            orders = tmp->data.price_level->head;
+                            n->qty = 0;
+                            // Оба ордера закрыты
+                        }
+                    }
+                    if(tmp->data.price_level->size == 0)
+                        deleteNode(&bye_glass, tmp);
+                    if(n->qty != 0) {
+                        tmp = bye_glass;
+                        while(tmp->right != NIL)
+                            tmp = tmp->right;
+                        if(tmp == NIL)
+                            break;
+                    }
+                }
+                if(n->qty != 0)
+//                    printf("Orders sell closed");// Исполняем ордер выходим
+                    insertNode(&sell_glass, *n);
+            }
 
             //printf("type:%c N=%d side:%c qty=%d price=%f\n", c_type, uniq_number, c_side, qty, price);
         } else if(count == 2) {
@@ -63,7 +152,7 @@ int main()
     n = findNode(&bye_glass, *p);
     if(n != NULL)
         printf("%f\n",n->data.price);
-    printf("Max_bye=%d\tmax_sell=%d \nEnd of file!\n", bye_max, sell_max);
+    printf("\nMax_bye=%d\tmax_sell=%d \nEnd of file!\n", bye_max, sell_max);
     fclose(in);
     return 0;
 }

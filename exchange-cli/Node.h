@@ -14,6 +14,8 @@
 //#define compLT(a,b) (a < b)
 //#define compEQ(a,b) (a == b)
 
+float max_sell, max_bye;
+
 int comp_npack(Order a, Order b) {
     return a.num_pack < b.num_pack;
 }
@@ -23,8 +25,10 @@ typedef enum { BLACK, RED } nodeColor;
 
 typedef struct PriceData_ {
     float price;
-    //PriceLevel price_lvl;
-    int size;
+    int qty;
+    int number_pack;
+    char side;
+    PriceLevel *price_level;
 } PriceData;
 
 typedef struct Node_ {
@@ -47,12 +51,12 @@ int compEQ(PriceData a, PriceData b) {
 Node sentinel = { NIL, NIL, 0, BLACK, 0};
 //Node *root = NIL;
 
+/**************************
+ *  rotate node x to left *
+ **************************/
 void rotateLeft(Node** glass_tree, Node *x) {
 
     Node* root = *glass_tree;
-   /**************************
-    *  rotate node x to left *
-    **************************/
 
     Node *y = x->right;
 
@@ -77,12 +81,12 @@ void rotateLeft(Node** glass_tree, Node *x) {
     *glass_tree = root;
 }
 
+/****************************
+ *  rotate node x to right  *
+ ****************************/
 void rotateRight(Node** glass_tree, Node *x) {
 
     Node* root = *glass_tree;
-   /****************************
-    *  rotate node x to right  *
-    ****************************/
 
     Node *y = x->left;
 
@@ -107,14 +111,14 @@ void rotateRight(Node** glass_tree, Node *x) {
     *glass_tree = root;
 }
 
+/*************************************
+ *  maintain Red-Black tree balance  *
+ *  after inserting node x           *
+ *************************************/
 void insertFixup(Node** glass_tree, Node *x) {
 
     Node* root = *glass_tree;
 
-   /*************************************
-    *  maintain Red-Black tree balance  *
-    *  after inserting node x           *
-    *************************************/
 
     /* check Red-Black properties */
     while (x != root && x->parent->color == RED) {
@@ -169,19 +173,30 @@ void insertFixup(Node** glass_tree, Node *x) {
     root->color = BLACK;
     *glass_tree = root;
 }
-
+/***********************************************
+ *  allocate node for data and insert in tree  *
+ ***********************************************/
 Node *insertNode(Node** glass_tree, PriceData data) {
-    Node *current, *parent, *x;
+    Node* current, *parent, *x;
     Node* root = *glass_tree;
-   /***********************************************
-    *  allocate node for data and insert in tree  *
-    ***********************************************/
 
     /* find where node belongs */
     current = root;
     parent = 0;
     while (current != NIL) {
-        if (compEQ(data, current->data)) return (current);
+        if (compEQ(data, current->data)) {
+            Order *ord = (Order*)malloc(sizeof (Order));
+            ord->num_pack = data.number_pack;
+            ord->qty = data.qty;
+            ord->side = data.side;
+            ord->price = data.price;
+            push_back(current->data.price_level, ord);
+            //printf("size=%d\t", current->data.price_level->size);
+            //fflush(stdout);
+            //printList(current->data.price_level);
+            fflush(stdout);
+            return (current);
+        }
         parent = current;
         current = compLT(data, current->data) ?
             current->left : current->right;
@@ -192,6 +207,22 @@ Node *insertNode(Node** glass_tree, PriceData data) {
         printf ("insufficient memory (insertNode)\n");
         exit(1);
     }
+    Order *ord = (Order*)malloc(sizeof (Order));
+    ord->num_pack = data.number_pack;
+    ord->qty = data.qty;
+    ord->side = data.side;
+    ord->price = data.price;
+    data.price_level = createLinkedList();
+    push_back(data.price_level, ord);
+
+    if(data.side == 'B') {
+        if(max_bye < data.price)
+            max_bye = data.price;
+    } else {
+        if(max_sell > data.price)
+            max_sell = data.price;
+    }
+
     x->data = data;
     x->parent = parent;
     x->left = NIL;
@@ -212,110 +243,115 @@ Node *insertNode(Node** glass_tree, PriceData data) {
     *glass_tree = root;
     return(x);
 }
-//void deleteFixup(Node *x) {
+void deleteFixup(Node** glass_tree, Node *x) {
 
-//   /*************************************
-//    *  maintain Red-Black tree balance  *
-//    *  after deleting node x            *
-//    *************************************/
+   /*************************************
+    *  maintain Red-Black tree balance  *
+    *  after deleting node x            *
+    *************************************/
 
-//    while (x != root && x->color == BLACK) {
-//        if (x == x->parent->left) {
-//            Node *w = x->parent->right;
-//            if (w->color == RED) {
-//                w->color = BLACK;
-//                x->parent->color = RED;
-//                rotateLeft (x->parent);
-//                w = x->parent->right;
-//            }
-//            if (w->left->color == BLACK && w->right->color == BLACK) {
-//                w->color = RED;
-//                x = x->parent;
-//            } else {
-//                if (w->right->color == BLACK) {
-//                    w->left->color = BLACK;
-//                    w->color = RED;
-//                    rotateRight (w);
-//                    w = x->parent->right;
-//                }
-//                w->color = x->parent->color;
-//                x->parent->color = BLACK;
-//                w->right->color = BLACK;
-//                rotateLeft (x->parent);
-//                x = root;
-//            }
-//        } else {
-//            Node *w = x->parent->left;
-//            if (w->color == RED) {
-//                w->color = BLACK;
-//                x->parent->color = RED;
-//                rotateRight (x->parent);
-//                w = x->parent->left;
-//            }
-//            if (w->right->color == BLACK && w->left->color == BLACK) {
-//                w->color = RED;
-//                x = x->parent;
-//            } else {
-//                if (w->left->color == BLACK) {
-//                    w->right->color = BLACK;
-//                    w->color = RED;
-//                    rotateLeft (w);
-//                    w = x->parent->left;
-//                }
-//                w->color = x->parent->color;
-//                x->parent->color = BLACK;
-//                w->left->color = BLACK;
-//                rotateRight (x->parent);
-//                x = root;
-//            }
-//        }
-//    }
-//    x->color = BLACK;
-//}
+    Node* root = *glass_tree;
 
-//void deleteNode(Node *z) {
-//    Node *x, *y;
+    while (x != root && x->color == BLACK) {
+        if (x == x->parent->left) {
+            Node *w = x->parent->right;
+            if (w->color == RED) {
+                w->color = BLACK;
+                x->parent->color = RED;
+                rotateLeft (&root, x->parent);
+                w = x->parent->right;
+            }
+            if (w->left->color == BLACK && w->right->color == BLACK) {
+                w->color = RED;
+                x = x->parent;
+            } else {
+                if (w->right->color == BLACK) {
+                    w->left->color = BLACK;
+                    w->color = RED;
+                    rotateRight (&root, w);
+                    w = x->parent->right;
+                }
+                w->color = x->parent->color;
+                x->parent->color = BLACK;
+                w->right->color = BLACK;
+                rotateLeft (&root, x->parent);
+                x = root;
+            }
+        } else {
+            Node *w = x->parent->left;
+            if (w->color == RED) {
+                w->color = BLACK;
+                x->parent->color = RED;
+                rotateRight (&root, x->parent);
+                w = x->parent->left;
+            }
+            if (w->right->color == BLACK && w->left->color == BLACK) {
+                w->color = RED;
+                x = x->parent;
+            } else {
+                if (w->left->color == BLACK) {
+                    w->right->color = BLACK;
+                    w->color = RED;
+                    rotateLeft (&root, w);
+                    w = x->parent->left;
+                }
+                w->color = x->parent->color;
+                x->parent->color = BLACK;
+                w->left->color = BLACK;
+                rotateRight (&root, x->parent);
+                x = root;
+            }
+        }
+    }
+    x->color = BLACK;
+    *glass_tree = root;
+}
 
-//   /*****************************
-//    *  delete node z from tree  *
-//    *****************************/
+void deleteNode(Node** glass_tree, Node *z) {
+    Node *x, *y;
+    Node* root = *glass_tree;
 
-//    if (!z || z == NIL) return;
+   /*****************************
+    *  delete node z from tree  *
+    *****************************/
 
-
-//    if (z->left == NIL || z->right == NIL) {
-//        /* y has a NIL node as a child */
-//        y = z;
-//    } else {
-//        /* find tree successor with a NIL node as a child */
-//        y = z->right;
-//        while (y->left != NIL) y = y->left;
-//    }
-
-//    /* x is y's only child */
-//    if (y->left != NIL)
-//        x = y->left;
-//    else
-//        x = y->right;
-
-//    /* remove y from the parent chain */
-//    x->parent = y->parent;
-//    if (y->parent)
-//        if (y == y->parent->left)
-//            y->parent->left = x;
-//        else
-//            y->parent->right = x;
-//    else
-//        root = x;
-
-//    if (y != z) z->data = y->data;
+    if (!z || z == NIL) return;
 
 
-//    if (y->color == BLACK)
-//        deleteFixup (x);
+    if (z->left == NIL || z->right == NIL) {
+        /* y has a NIL node as a child */
+        y = z;
+    } else {
+        /* find tree successor with a NIL node as a child */
+        y = z->right;
+        while (y->left != NIL) y = y->left;
+    }
 
-//    free (y);
-//}
+    /* x is y's only child */
+    if (y->left != NIL)
+        x = y->left;
+    else
+        x = y->right;
+
+    /* remove y from the parent chain */
+    x->parent = y->parent;
+    if (y->parent)
+        if (y == y->parent->left)
+            y->parent->left = x;
+        else
+            y->parent->right = x;
+    else
+        root = x;
+
+    if (y != z) z->data = y->data;
+
+
+    if (y->color == BLACK)
+        deleteFixup (&root, x);
+
+    free (y);
+    *glass_tree = root;
+}
 
 Node *findNode(Node** glass_tree, PriceData data) {
     Node* root = *glass_tree;
