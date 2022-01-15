@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 typedef struct Order_ {
-    unsigned int num_pack;
+    unsigned int oid;
     unsigned int qty;
     char side;
     float price;
@@ -70,7 +70,7 @@ Order* pop_front(PriceLevel *list) {
 }
 
 void fun(Order *ord) {
-    printf("price=%f\tnumber=%d\t\tqty=%d", ord->price, ord->num_pack, ord->qty);
+    printf("price=%f\tnumber=%d\t\tqty=%d", ord->price, ord->oid, ord->qty);
 }
 
 void printList(PriceLevel *list) {

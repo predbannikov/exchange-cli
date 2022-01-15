@@ -1,62 +1,51 @@
-#ifndef NODE_H
-#define NODE_H
-/* red-black tree */
+#ifndef OIDSTORE_H
+#define OIDSTORE_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include "PriceLevel.h"
+#include "Node.h"
 
-
-
-
-
-/* Red-Black tree description */
-typedef enum { BLACK, RED } nodeColor;
-
-typedef struct PriceData_ {
+typedef struct OID_ {
+    unsigned oid;
     float price;
-    int qty;
-    int oid;
     char side;
-    PriceLevel *price_level;
-} PriceData;
+} OID;
 
-typedef struct Node_ {
-    struct Node_ *left;         /* left child */
-    struct Node_ *right;        /* right child */
-    struct Node_ *parent;       /* parent */
+//typedef enum { BLACK, RED } nodeColor;
+
+typedef struct NodeOID_ {
+    struct NodeOID_ *left;         /* left child */
+    struct NodeOID_ *right;        /* right child */
+    struct NodeOID_ *parent;       /* parent */
     nodeColor color;            /* node color (BLACK, RED) */
-    PriceData data;                     /* data stored in node */
-} Node;
+    OID data;                     /* data stored in node */
+} NodeOID;
 
-int compLT(PriceData a, PriceData b) {
-    return a.price < b.price;
+int cmpLTOID(OID a, OID b) {
+    return a.oid < b.oid;
 }
 
-int compEQ(PriceData a, PriceData b) {
-    return a.price == b.price;
+int cmpEQOID(OID a, OID b) {
+    return a.oid == b.oid;
 }
 
-#define NIL &sentinel           /* all leafs are sentinels */
-Node sentinel = { NIL, NIL, 0, BLACK, 0};
+
+#define NILOID &sentineloid           /* all leafs are sentinels */
+NodeOID sentineloid = { NILOID, NILOID, 0, BLACK, 0};
 
 /**************************
  *  rotate node x to left *
  **************************/
-void rotateLeft(Node** glass_tree, Node *x) {
+void rotateLeftOID(NodeOID** tree, NodeOID *x) {
 
-    Node* root = *glass_tree;
+    NodeOID* root = *tree;
 
-    Node *y = x->right;
+    NodeOID *y = x->right;
 
     /* establish x->right link */
     x->right = y->left;
-    if (y->left != NIL) y->left->parent = x;
+    if (y->left != NILOID) y->left->parent = x;
 
     /* establish y->parent link */
-    if (y != NIL) y->parent = x->parent;
+    if (y != NILOID) y->parent = x->parent;
     if (x->parent) {
         if (x == x->parent->left)
             x->parent->left = y;
@@ -68,25 +57,25 @@ void rotateLeft(Node** glass_tree, Node *x) {
 
     /* link x and y */
     y->left = x;
-    if (x != NIL) x->parent = y;
-    *glass_tree = root;
+    if (x != NILOID) x->parent = y;
+    *tree = root;
 }
 
 /****************************
  *  rotate node x to right  *
  ****************************/
-void rotateRight(Node** glass_tree, Node *x) {
+void rotateRightOID(NodeOID** tree, NodeOID *x) {
 
-    Node* root = *glass_tree;
+    NodeOID* root = *tree;
 
-    Node *y = x->left;
+    NodeOID *y = x->left;
 
     /* establish x->left link */
     x->left = y->right;
-    if (y->right != NIL) y->right->parent = x;
+    if (y->right != NILOID) y->right->parent = x;
 
     /* establish y->parent link */
-    if (y != NIL) y->parent = x->parent;
+    if (y != NILOID) y->parent = x->parent;
     if (x->parent) {
         if (x == x->parent->right)
             x->parent->right = y;
@@ -98,24 +87,24 @@ void rotateRight(Node** glass_tree, Node *x) {
 
     /* link x and y */
     y->right = x;
-    if (x != NIL) x->parent = y;
-    *glass_tree = root;
+    if (x != NILOID) x->parent = y;
+    *tree = root;
 }
 
 /*************************************
  *  maintain Red-Black tree balance  *
  *  after inserting node x           *
  *************************************/
-void insertFixup(Node** glass_tree, Node *x) {
+void insertFixupOID(NodeOID** tree, NodeOID *x) {
 
-    Node* root = *glass_tree;
+    NodeOID* root = *tree;
 
 
     /* check Red-Black properties */
     while (x != root && x->parent->color == RED) {
         /* we have a violation */
         if (x->parent == x->parent->parent->left) {
-            Node *y = x->parent->parent->right;
+            NodeOID *y = x->parent->parent->right;
             if (y->color == RED) {
 
                 /* uncle is RED */
@@ -129,18 +118,18 @@ void insertFixup(Node** glass_tree, Node *x) {
                 if (x == x->parent->right) {
                     /* make x a left child */
                     x = x->parent;
-                    rotateLeft(&root, x);
+                    rotateLeftOID(&root, x);
                 }
 
                 /* recolor and rotate */
                 x->parent->color = BLACK;
                 x->parent->parent->color = RED;
-                rotateRight(&root, x->parent->parent);
+                rotateRightOID(&root, x->parent->parent);
             }
         } else {
 
             /* mirror image of above code */
-            Node *y = x->parent->parent->left;
+            NodeOID *y = x->parent->parent->left;
             if (y->color == RED) {
 
                 /* uncle is RED */
@@ -153,66 +142,52 @@ void insertFixup(Node** glass_tree, Node *x) {
                 /* uncle is BLACK */
                 if (x == x->parent->left) {
                     x = x->parent;
-                    rotateRight(&root, x);
+                    rotateRightOID(&root, x);
                 }
                 x->parent->color = BLACK;
                 x->parent->parent->color = RED;
-                rotateLeft(&root, x->parent->parent);
+                rotateLeftOID(&root, x->parent->parent);
             }
         }
     }
     root->color = BLACK;
-    *glass_tree = root;
+    *tree = root;
 }
 
 /***********************************************
  *  allocate node for data and insert in tree  *
  ***********************************************/
-Node *insertNode(Node** glass_tree, PriceData data) {
-    Node* current, *parent, *x;
-    Node* root = *glass_tree;
+NodeOID *insertNodeOID(NodeOID** tree, OID data) {
+    NodeOID* current, *parent, *x;
+    NodeOID* root = *tree;
 
     /* find where node belongs */
     current = root;
     parent = 0;
-    while (current != NIL) {
-        if (compEQ(data, current->data)) {
-            Order *ord = (Order*)malloc(sizeof (Order));
-            ord->oid = data.oid;
-            ord->qty = data.qty;
-            ord->side = data.side;
-            ord->price = data.price;
-            push_back(current->data.price_level, ord);
+    while (current != NILOID) {
+        if (cmpEQOID(data, current->data)) {
             return (current);
         }
         parent = current;
-        current = compLT(data, current->data) ?
+        current = cmpLTOID(data, current->data) ?
             current->left : current->right;
     }
 
     /* setup new node */
-    if ((x = malloc (sizeof(*x))) == 0) {
-        printf ("insufficient memory (insertNode)\n");
+    if ((x = (NodeOID*) malloc (sizeof(*x))) == 0) {
+        printf ("insufficient memory (insertNodeOID)\n");
         exit(1);
     }
-    Order *ord = (Order*)malloc(sizeof (Order));
-    ord->oid = data.oid;
-    ord->qty = data.qty;
-    ord->side = data.side;
-    ord->price = data.price;
-    data.price_level = createLinkedList();
-    push_back(data.price_level, ord);
-
 
     x->data = data;
     x->parent = parent;
-    x->left = NIL;
-    x->right = NIL;
+    x->left = NILOID;
+    x->right = NILOID;
     x->color = RED;
 
     /* insert node in tree */
     if(parent) {
-        if(compLT(data, parent->data))
+        if(cmpLTOID(data, parent->data))
             parent->left = x;
         else
             parent->right = x;
@@ -220,8 +195,8 @@ Node *insertNode(Node** glass_tree, PriceData data) {
         root = x;
     }
 
-    insertFixup(&root, x);
-    *glass_tree = root;
+    insertFixupOID(&root, x);
+    *tree = root;
     return(x);
 }
 
@@ -229,17 +204,17 @@ Node *insertNode(Node** glass_tree, PriceData data) {
  *  maintain Red-Black tree balance  *
  *  after deleting node x            *
  *************************************/
-void deleteFixup(Node** glass_tree, Node *x) {
+void deleteFixupOID(NodeOID** tree, NodeOID *x) {
 
-    Node* root = *glass_tree;
+    NodeOID* root = *tree;
 
     while (x != root && x->color == BLACK) {
         if (x == x->parent->left) {
-            Node *w = x->parent->right;
+            NodeOID *w = x->parent->right;
             if (w->color == RED) {
                 w->color = BLACK;
                 x->parent->color = RED;
-                rotateLeft (&root, x->parent);
+                rotateLeftOID (&root, x->parent);
                 w = x->parent->right;
             }
             if (w->left->color == BLACK && w->right->color == BLACK) {
@@ -249,21 +224,21 @@ void deleteFixup(Node** glass_tree, Node *x) {
                 if (w->right->color == BLACK) {
                     w->left->color = BLACK;
                     w->color = RED;
-                    rotateRight (&root, w);
+                    rotateRightOID (&root, w);
                     w = x->parent->right;
                 }
                 w->color = x->parent->color;
                 x->parent->color = BLACK;
                 w->right->color = BLACK;
-                rotateLeft (&root, x->parent);
+                rotateLeftOID (&root, x->parent);
                 x = root;
             }
         } else {
-            Node *w = x->parent->left;
+            NodeOID *w = x->parent->left;
             if (w->color == RED) {
                 w->color = BLACK;
                 x->parent->color = RED;
-                rotateRight (&root, x->parent);
+                rotateRightOID (&root, x->parent);
                 w = x->parent->left;
             }
             if (w->right->color == BLACK && w->left->color == BLACK) {
@@ -273,43 +248,43 @@ void deleteFixup(Node** glass_tree, Node *x) {
                 if (w->left->color == BLACK) {
                     w->right->color = BLACK;
                     w->color = RED;
-                    rotateLeft (&root, w);
+                    rotateLeftOID (&root, w);
                     w = x->parent->left;
                 }
                 w->color = x->parent->color;
                 x->parent->color = BLACK;
                 w->left->color = BLACK;
-                rotateRight (&root, x->parent);
+                rotateRightOID (&root, x->parent);
                 x = root;
             }
         }
     }
     x->color = BLACK;
-    *glass_tree = root;
+    *tree = root;
 }
 
 
 /*****************************
  *  delete node z from tree  *
  *****************************/
-void deleteNode(Node** glass_tree, Node *z) {
-    Node *x, *y;
-    Node* root = *glass_tree;
+void deleteNodeOID(NodeOID** tree, NodeOID *z) {
+    NodeOID *x, *y;
+    NodeOID* root = *tree;
 
-    if (!z || z == NIL) return;
+    if (!z || z == NILOID) return;
 
 
-    if (z->left == NIL || z->right == NIL) {
-        /* y has a NIL node as a child */
+    if (z->left == NILOID || z->right == NILOID) {
+        /* y has a NILOID node as a child */
         y = z;
     } else {
-        /* find tree successor with a NIL node as a child */
+        /* find tree successor with a NILOID node as a child */
         y = z->right;
-        while (y->left != NIL) y = y->left;
+        while (y->left != NILOID) y = y->left;
     }
 
     /* x is y's only child */
-    if (y->left != NIL)
+    if (y->left != NILOID)
         x = y->left;
     else
         x = y->right;
@@ -328,23 +303,23 @@ void deleteNode(Node** glass_tree, Node *z) {
 
 
     if (y->color == BLACK)
-        deleteFixup (&root, x);
+        deleteFixupOID (&root, x);
 
     free (y);
-    *glass_tree = root;
+    *tree = root;
 }
 
 /*******************************
  *  find node containing data  *
  *******************************/
-Node *findNode(Node** glass_tree, PriceData data) {
-    Node *current = *glass_tree;
-    while(current != NIL)
-        if(compEQ(data, current->data))
+NodeOID *findNodeOID(NodeOID** tree, OID data) {
+    NodeOID *current = *tree;
+    while(current != NILOID)
+        if(cmpEQOID(data, current->data))
             return (current);
         else
-            current = compLT (data, current->data) ?
+            current = cmpLTOID (data, current->data) ?
                 current->left : current->right;
     return(0);
 }
-#endif // NODE_H
+#endif // OIDSTORE_H
