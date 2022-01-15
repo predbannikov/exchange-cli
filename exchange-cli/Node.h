@@ -16,9 +16,7 @@
 
 float max_sell, max_bye;
 
-int comp_npack(Order a, Order b) {
-    return a.num_pack < b.num_pack;
-}
+
 
 /* Red-Black tree description */
 typedef enum { BLACK, RED } nodeColor;
