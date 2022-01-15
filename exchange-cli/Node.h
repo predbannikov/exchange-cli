@@ -10,12 +10,6 @@
 
 
 
-//typedef float T;                  /* type of item to be stored */
-//#define compLT(a,b) (a < b)
-//#define compEQ(a,b) (a == b)
-
-float max_sell, max_bye;
-
 
 
 /* Red-Black tree description */
@@ -343,7 +337,7 @@ void deleteNode(Node** glass_tree, Node *z) {
 /*******************************
  *  find node containing data  *
  *******************************/
-Node *findPriceLvl(Node** glass_tree, PriceData data) {
+Node *findNode(Node** glass_tree, PriceData data) {
     Node *current = *glass_tree;
     while(current != NIL)
         if(compEQ(data, current->data))
