@@ -47,7 +47,6 @@ int compEQ(PriceData a, PriceData b) {
 
 #define NIL &sentinel           /* all leafs are sentinels */
 Node sentinel = { NIL, NIL, 0, BLACK, 0};
-//Node *root = NIL;
 
 /**************************
  *  rotate node x to left *
@@ -171,6 +170,7 @@ void insertFixup(Node** glass_tree, Node *x) {
     root->color = BLACK;
     *glass_tree = root;
 }
+
 /***********************************************
  *  allocate node for data and insert in tree  *
  ***********************************************/
@@ -189,10 +189,6 @@ Node *insertNode(Node** glass_tree, PriceData data) {
             ord->side = data.side;
             ord->price = data.price;
             push_back(current->data.price_level, ord);
-            //printf("size=%d\t", current->data.price_level->size);
-            //fflush(stdout);
-            //printList(current->data.price_level);
-            fflush(stdout);
             return (current);
         }
         parent = current;
@@ -213,13 +209,6 @@ Node *insertNode(Node** glass_tree, PriceData data) {
     data.price_level = createLinkedList();
     push_back(data.price_level, ord);
 
-    if(data.side == 'B') {
-        if(max_bye < data.price)
-            max_bye = data.price;
-    } else {
-        if(max_sell > data.price)
-            max_sell = data.price;
-    }
 
     x->data = data;
     x->parent = parent;
@@ -241,12 +230,12 @@ Node *insertNode(Node** glass_tree, PriceData data) {
     *glass_tree = root;
     return(x);
 }
-void deleteFixup(Node** glass_tree, Node *x) {
 
-   /*************************************
-    *  maintain Red-Black tree balance  *
-    *  after deleting node x            *
-    *************************************/
+/*************************************
+ *  maintain Red-Black tree balance  *
+ *  after deleting node x            *
+ *************************************/
+void deleteFixup(Node** glass_tree, Node *x) {
 
     Node* root = *glass_tree;
 
@@ -305,13 +294,13 @@ void deleteFixup(Node** glass_tree, Node *x) {
     *glass_tree = root;
 }
 
+
+/*****************************
+ *  delete node z from tree  *
+ *****************************/
 void deleteNode(Node** glass_tree, Node *z) {
     Node *x, *y;
     Node* root = *glass_tree;
-
-   /*****************************
-    *  delete node z from tree  *
-    *****************************/
 
     if (!z || z == NIL) return;
 
@@ -351,13 +340,11 @@ void deleteNode(Node** glass_tree, Node *z) {
     *glass_tree = root;
 }
 
-Node *findNode(Node** glass_tree, PriceData data) {
-    Node* root = *glass_tree;
-   /*******************************
-    *  find node containing data  *
-    *******************************/
-
-    Node *current = root;
+/*******************************
+ *  find node containing data  *
+ *******************************/
+Node *findPriceLvl(Node** glass_tree, PriceData data) {
+    Node *current = *glass_tree;
     while(current != NIL)
         if(compEQ(data, current->data))
             return (current);

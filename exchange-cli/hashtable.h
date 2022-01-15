@@ -6,7 +6,9 @@
 #include <string.h>
 #include <malloc.h>
 #include <stdint.h>
-#define HT_ISIZE  5
+
+#define HT_ISIZE  5000
+#define SIZEINT sizeof(int)
 
 typedef void   (tb_free)(void*);
 typedef int    (tb_cmp)(const void*, const void*);
@@ -52,10 +54,14 @@ void   iter_reset(iter_t* it);
 static int cmp_str(const void* a, const void* b) { return strcmp((const char*)a, (const char*)b) == 0; }
 
 static size_t hash_str(const void* p){ //хеш-функция для строк
-    const char* s = (const char*)p;
+//    const char* s = (const char*)p;
+//    size_t k = 0;
+//    for(; *s; ++s)
+//        k += k ^ (size_t)*s;
+    const char* c = (const char*)p;
     size_t k = 0;
-    for(; *s; ++s)
-        k += k ^ (size_t)*s;
+    for(int i = 0; i < SIZEINT; i++)
+        k += k ^ (size_t)*c;
     return k;
 }
 

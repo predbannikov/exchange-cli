@@ -182,11 +182,11 @@ int main()
             char glass_side = p->val.side;
             PriceData pcdt = {cancle_node};
             if(glass_side == 'B') {
-                Node *nd = findNode(&bye_glass, pcdt);
+                Node *nd = findPriceLvl(&bye_glass, pcdt);
                 //printf("Cancle B: %d", nd->data.number_pack);
                 deleteNode(&bye_glass, nd);
             } else {
-                Node *nd = findNode(&sell_glass, pcdt);
+                Node *nd = findPriceLvl(&sell_glass, pcdt);
                 //printf("Cancle B: %d", nd->data.number_pack);
                 deleteNode(&sell_glass, nd);
             }
@@ -207,7 +207,7 @@ int main()
     PriceData *p = (PriceData*)malloc(sizeof(PriceData));
     p->price = 250.61;
     Node *n = NIL;
-    n = findNode(&bye_glass, *p);
+    n = findPriceLvl(&bye_glass, *p);
     if(n != NULL)
         printf("%f\n",n->data.price);
     printf("\nMax_bye=%d\tmax_sell=%d \nEnd of file!\n", bye_max, sell_max);
