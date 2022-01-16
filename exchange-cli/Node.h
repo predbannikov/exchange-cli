@@ -6,10 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <math.h>
 #include "PriceLevel.h"
 
 
-
+#define EPS 0.0001
 
 
 /* Red-Black tree description */
@@ -17,7 +18,7 @@ typedef enum { BLACK, RED } nodeColor;
 
 typedef struct PriceData_ {
     float price;
-    int qty;
+    unsigned int qty;
     int oid;
     char side;
     PriceLevel *price_level;
@@ -31,12 +32,12 @@ typedef struct Node_ {
     PriceData data;             /* data stored in node */
 } Node;
 
-int compLT(PriceData a, PriceData b) {
+int cmpLT(PriceData a, PriceData b) {
     return a.price < b.price;
 }
 
-int compEQ(PriceData a, PriceData b) {
-    return a.price == b.price;
+int cmpEQ(PriceData a, PriceData b) {
+    return fabsf(a.price - b.price) <= EPS;
 }
 
 #define NIL &sentinel           /* all leafs are sentinels */
@@ -178,7 +179,7 @@ Node *insertNode(Node** glass_tree, PriceData data) {
     current = root;
     parent = 0;
     while (current != NIL) {
-        if (compEQ(data, current->data)) {
+        if (cmpEQ(data, current->data)) {
             Order *ord = (Order*)malloc(sizeof (Order));
             ord->oid = data.oid;
             ord->qty = data.qty;
@@ -189,7 +190,7 @@ Node *insertNode(Node** glass_tree, PriceData data) {
             return (current);
         }
         parent = current;
-        current = compLT(data, current->data) ?
+        current = cmpLT(data, current->data) ?
             current->left : current->right;
     }
 
@@ -215,7 +216,7 @@ Node *insertNode(Node** glass_tree, PriceData data) {
 
     /* insert node in tree */
     if(parent) {
-        if(compLT(data, parent->data))
+        if(cmpLT(data, parent->data))
             parent->left = x;
         else
             parent->right = x;
@@ -343,10 +344,10 @@ void deleteNode(Node** glass_tree, Node *z) {
 Node *findNode(Node** glass_tree, PriceData data) {
     Node *current = *glass_tree;
     while(current != NIL)
-        if(compEQ(data, current->data))
+        if(cmpEQ(data, current->data))
             return (current);
         else
-            current = compLT (data, current->data) ?
+            current = cmpLT (data, current->data) ?
                 current->left : current->right;
     return(0);
 }

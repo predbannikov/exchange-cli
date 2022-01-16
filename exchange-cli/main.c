@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "Node.h"
 #include "oidstore.h"
-#include "hashtable.h"
+//#include "hashtable.h"
 
 
 void heightTreeOid(NodeOID* tree, int lvl, int* max) {
@@ -133,6 +133,42 @@ Node* extr_elem(Node* tree, char side) {
 
 unsigned int trade_id = 1;
 
+float macheps(void)
+{
+    float e = 1.0f;
+    while (1.0f + e / 2.0f > 1.0f)
+        e /= 2.0f;
+    return e;
+}
+
+void morphNumericString (char *s, int n) {
+    char *p;
+    int count;
+
+    p = strchr (s,'.');         // Find decimal point, if any.
+    if (p != NULL) {
+        count = n;              // Adjust for more or less decimals.
+        while (count >= 0) {    // Maximum decimals allowed.
+             count--;
+             if (*p == '\0')    // If there's less than desired.
+                 break;
+             p++;               // Next character.
+        }
+
+        *p-- = '\0';            // Truncate string.
+        while (*p == '0')       // Remove trailing zeros.
+            *p-- = '\0';
+
+        if (*p == '.') {        // If all decimals were zeros, remove ".".
+            *p = '\0';
+        }
+    }
+}
+
+char fdgt_str[7];	//
+int left_dgt;
+int right_dgt;
+
 int matching(Node** glass, PriceData *n, NodeOID **oidstr) {
     Node* tmp = extr_elem(*glass, n->side);
     char side = n->side == 'B' ? 'S' : 'B';
@@ -149,18 +185,43 @@ int matching(Node** glass, PriceData *n, NodeOID **oidstr) {
         while(orders != NULL) {				// Обходим очередь или выход из цикла по break
             if(orders->value->qty > n->qty) {
                 orders->value->qty -= n->qty;
-                printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, side, orders->value->oid, n->oid, n->qty, orders->value->price);
+//                sprintf(fdgt_str,"%.2f", orders->value->price);
+//                morphNumericString(fdgt_str, 2);
+
+                left_dgt = (int) orders->value->price + 0.005;
+                right_dgt = (int)((orders->value->price - left_dgt + 0.005) * 100);
+                if(right_dgt %10 == 0)
+                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, n->oid, n->qty, left_dgt, right_dgt/10);
+                else
+                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, n->oid, n->qty, left_dgt, right_dgt);
+
+
                 n->qty = 0;
                 break;
             } else if(orders->value->qty < n->qty) {
                 n->qty -= orders->value->qty;
-                printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, orders->value->price);
+//                sprintf(fdgt_str,"%.2f", orders->value->price);
+//                morphNumericString(fdgt_str, 2);
+                left_dgt = (int) orders->value->price + 0.005;
+                right_dgt = (int)((orders->value->price - left_dgt + 0.005) * 100);
+                if(right_dgt % 10 == 0)
+                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, left_dgt, right_dgt/10);
+                else
+                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, left_dgt, right_dgt);
                 NodeOID *oid = findNodeOID(oidstr,(OID){orders->value->oid});
                 deleteNodeOID(oidstr, oid);
                 pop_front(tmp->data.price_level);
                 orders = tmp->data.price_level->head;
             } else {
-                printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, orders->value->price);
+//                sprintf(fdgt_str,"%.2f", orders->value->price);
+//                morphNumericString(fdgt_str, 2);
+                left_dgt = (int) orders->value->price + 0.005;
+                right_dgt = (int)((orders->value->price - left_dgt + 0.005) * 100);
+                if(right_dgt % 10 == 0)
+                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, left_dgt, right_dgt/10);
+                else
+                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, left_dgt, right_dgt);
+//               printf("T,%u,%c,%d,%d,%d,%s\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, fdgt_str);
                 NodeOID *oid = findNodeOID(oidstr,(OID){orders->value->oid});
                 deleteNodeOID(oidstr, oid);
                 pop_front(tmp->data.price_level);
@@ -236,27 +297,28 @@ int main()
         }
         counter++;
     }
-
-    printf("\n");
-    printf("sum orders oid=%d\n", SumTreeRecursOID(oidstore));
-    printf("sum orders bye=%d\n", SumTreeRecurs(bye_glass));
-    printf("sum orders sell=%d\n", SumTreeRecurs(sell_glass));
-
-    int bye_max = 0;
-    int sell_max = 0;
-    int oid_max = 0;
-    heightTree(bye_glass, 0, &bye_max);
-    heightTree(sell_glass, 0, &sell_max);
-    heightTreeOid(oidstore, 0, &oid_max);
-    PriceData *p = (PriceData*)malloc(sizeof(PriceData));
-    p->price = 250.61;
-    Node *ntest = NIL;
-    ntest = findNode(&bye_glass, *p);
-    if(ntest != NULL)
-        printf("found: %f\n",ntest->data.price);
-    printf("\nMax_bye=%d\tmax_sell=%d \nEnd of file!\n", bye_max, sell_max);
-    printf("max_height_oid=%d\n", oid_max);
     fclose(in);
+
+//    printf("\n");
+//    printf("sum orders oid=%d\n", SumTreeRecursOID(oidstore));
+//    printf("sum orders bye=%d\n", SumTreeRecurs(bye_glass));
+//    printf("sum orders sell=%d\n", SumTreeRecurs(sell_glass));
+
+//    int bye_max = 0;
+//    int sell_max = 0;
+//    int oid_max = 0;
+//    heightTree(bye_glass, 0, &bye_max);
+//    heightTree(sell_glass, 0, &sell_max);
+//    heightTreeOid(oidstore, 0, &oid_max);
+//    PriceData *p = (PriceData*)malloc(sizeof(PriceData));
+//    p->price = 250.61;
+//    Node *ntest = NIL;
+//    ntest = findNode(&bye_glass, *p);
+//    if(ntest != NULL)
+//        printf("found: %f\n",ntest->data.price);
+//    printf("\nMax_bye=%d\tmax_sell=%d \nEnd of file!\n", bye_max, sell_max);
+//    printf("max_height_oid=%d\n", oid_max);
+    //printf("diff: end of file\n");
 
     return 0;
 }
