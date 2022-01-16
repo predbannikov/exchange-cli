@@ -45,9 +45,11 @@ void push_back(PriceLevel *list, Order *value) {
     if (list->head == NULL) {
         list->head = tmp;
     }
-    if(list->tail == NULL)
+    //if(list->tail == NULL)
         list->tail = tmp;
     list->size++;
+//    if(list->size == 2 && list->head->next == NULL)
+//        printf("stop");
 }
 
 Order* pop_front(PriceLevel *list) {
@@ -71,6 +73,10 @@ Order* pop_front(PriceLevel *list) {
 }
 
 void delete_oid(PriceLevel *list, unsigned oid) {
+    static int counter = 0;
+    counter++;
+    if(counter == 105)
+        printf("stop");
     OrderLevel *ol = list->head;
     if(ol == NULL) {
         printf("stop");
@@ -78,7 +84,7 @@ void delete_oid(PriceLevel *list, unsigned oid) {
     }
     if (ol->value->oid == oid) {
         pop_front(list);
-        return;
+        //return;
     } else {
         while(ol->next != NULL) {
             if(ol->next->value->oid == oid)
@@ -90,14 +96,17 @@ void delete_oid(PriceLevel *list, unsigned oid) {
         } else {
             OrderLevel *tmp = ol->next;
             ol->next = ol->next->next;
-            free(tmp->value);
-            free(tmp);
             if(list->tail == tmp) {
                 list->tail = ol;
+                //list->tail = tmp->next;	// TODO ol or ol->next
             }
+            free(tmp->value);
+            free(tmp);
             list->size--;
         }
     }
+    if(list->size == 1 && list->head != list->tail)
+        printf("stop");
 }
 
 void fun(Order *ord) {

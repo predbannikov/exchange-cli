@@ -169,6 +169,8 @@ void insertFixup(Node** glass_tree, Node *x) {
  *  allocate node for data and insert in tree  *
  ***********************************************/
 Node *insertNode(Node** glass_tree, PriceData data) {
+    static int counter = 0;
+    counter++;
     Node* current, *parent, *x;
     Node* root = *glass_tree;
 
@@ -182,7 +184,13 @@ Node *insertNode(Node** glass_tree, PriceData data) {
             ord->qty = data.qty;
             ord->side = data.side;
             ord->price = data.price;
+            if(counter == 1431)
+                printf("stop");
+            if(counter == 160)
+                printf("stop");
             push_back(current->data.price_level, ord);
+            if(current->data.price_level->size == 2 && current->data.price_level->head->next == NULL)
+                printf("stop");
             return (current);
         }
         parent = current;
