@@ -56,7 +56,7 @@ int cancle_order(Node **glass, NodeOID *noid){
     if(ol != NULL && ol->value->oid == noid->data.oid) {
         OrderLevel *tmp = ol;
         ol = ol->next;
-        free(tmp);
+        free(tmp->value);
         node_to_cncl->data.price_level->size--;
     } else {
         while(ol->next != NULL) {
@@ -69,7 +69,7 @@ int cancle_order(Node **glass, NodeOID *noid){
         } else {
             OrderLevel *tmp = ol->next;
             ol->next = ol->next->next;
-            free(tmp);
+            free(tmp->value);
             node_to_cncl->data.price_level->size--;
         }
     }
