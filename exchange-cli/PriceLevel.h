@@ -75,8 +75,8 @@ Order* pop_front(PriceLevel *list) {
 void delete_oid(PriceLevel *list, unsigned oid) {
     static int counter = 0;
     counter++;
-    if(counter == 105)
-        printf("stop");
+//    if(counter == 105)
+//        printf("stop");
     OrderLevel *ol = list->head;
     if(ol == NULL) {
         printf("stop");
@@ -92,7 +92,7 @@ void delete_oid(PriceLevel *list, unsigned oid) {
             ol = ol->next;
         }
         if(ol->next == NULL) {
-            printf("Error: OrderLevel not contain oid=%d for delete\n", oid );
+            //printf("Error: OrderLevel not contain oid=%d for delete\n", oid );
         } else {
             OrderLevel *tmp = ol->next;
             ol->next = ol->next->next;

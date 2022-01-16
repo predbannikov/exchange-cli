@@ -184,10 +184,10 @@ Node *insertNode(Node** glass_tree, PriceData data) {
             ord->qty = data.qty;
             ord->side = data.side;
             ord->price = data.price;
-            if(counter == 1431)
-                printf("stop");
-            if(counter == 160)
-                printf("stop");
+//            if(counter == 1431)
+//                printf("stop");
+//            if(counter == 160)
+//                printf("stop");
             push_back(current->data.price_level, ord);
             if(current->data.price_level->size == 2 && current->data.price_level->head->next == NULL)
                 printf("stop");

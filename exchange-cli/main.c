@@ -70,12 +70,30 @@ void test(Node* t1, Node *t2) {
     travers_chack_head_tail_eq(t1);
     travers_chack_head_tail_eq(t2);
 }
-int SumTreeRecurs(NodeOID* tree) {
+int SumTreeRecursOID(NodeOID* tree) {
     if (tree == NILOID)
         return 0;
-    return SumTreeRecurs(tree->left) + SumTreeRecurs(tree->right) + 1;
+    return SumTreeRecursOID(tree->left) + SumTreeRecursOID(tree->right) + 1;
 }
 
+int SumLinkList(PriceLevel *price_level) {
+    OrderLevel *lvl = price_level->head;
+    int sum = 1;
+    while(lvl != price_level->tail) {
+        sum++;
+        lvl = lvl->next;
+    }
+    return sum;
+}
+
+int SumTreeRecurs(Node* tree) {
+    if (tree == NIL)
+        return 0;
+    int value = SumLinkList(tree->data.price_level);
+    int left = SumTreeRecurs(tree->left);
+    int right = SumTreeRecurs(tree->right);
+    return left + right + value;
+}
 void printCountOID(NodeOID* tree) {
     int sum = SumTreeRecurs(tree);
     printf("count=%d\n", sum);
@@ -85,13 +103,13 @@ void printCountOID(NodeOID* tree) {
 int cancle_order(Node **glass, NodeOID *noid){
     static int counter = 0;
     Node* node = *glass;
-    travers_chack_head_tail_eq(node);
+    //travers_chack_head_tail_eq(node);
     //travers_chack_node(node);
     PriceData price_data = {noid->data.price};
     Node *node_to_cncl = findNode(&node, price_data);
     if(node_to_cncl == NULL) {
-        printf("Error: Node not contain price_level=%f for this oid=%d\n", noid->data.price, noid->data.oid);
-        fflush(stdout);
+//        printf("Error: Node not contain price_level=%f for this oid=%d\n", noid->data.price, noid->data.oid);
+//        fflush(stdout);
         return 0;
     }
     //travers_chack_node(node);
@@ -101,11 +119,11 @@ int cancle_order(Node **glass, NodeOID *noid){
 
     //PriceLevel pclvl = *node_to_cncl->data.price_level;
     //delete_oid(&pclvl, noid->data.oid);
-    if(counter == 104)
-        printf("stop");
-    if(counter == 280)
-        printf("stop");
-    travers_chack_head_tail_eq(node);
+//    if(counter == 104)
+//        printf("stop");
+//    if(counter == 280)
+//        printf("stop");
+    //travers_chack_head_tail_eq(node);
     delete_oid(node_to_cncl->data.price_level, noid->data.oid);
 
     //travers_chack_node(node);
@@ -115,10 +133,10 @@ int cancle_order(Node **glass, NodeOID *noid){
         deb_check_node(node, price_data);
     }
     fflush(stdout);
-    travers_chack_node(node);
+    //travers_chack_node(node);
     *glass = node;
     counter++;
-    travers_chack_head_tail_eq(node);
+    //travers_chack_head_tail_eq(node);
     return 0;
 }
 
@@ -157,15 +175,16 @@ int main()
         n->oid = oid;
         n->qty = qty;
         n->side = c_side;
-        if(counter == 4189)
-            printf("stop");
+//        printf("%d ", counter);
+//        if(counter == 4189)
+//            printf("stop");
         if(c_type == 'O') {
             if(n->side == 'B') {
                 Node* tmp = sell_glass;
                 while(tmp->left != NIL)
                     tmp = tmp->left;
-                if(counter == 291)
-                    printf("stop");
+//                if(counter == 291)
+//                    printf("stop");
                 while(tmp->data.price <= n->price && tmp != NIL && n->qty != 0) {	// Если есть покупатели то выполняем сделки
                     OrderLevel *orders = tmp->data.price_level->head;			// Получаем первый в очереди ордер на покупку
                     while(orders != NULL) {				// Обходим очередь или выход из цикла по break
@@ -184,7 +203,7 @@ int main()
                             //PriceData pcdatatest = tmp->data;
                             pop_front(tmp->data.price_level);
                             //deb_check_node(sell_glass, pcdatatest);
-                           orders = tmp->data.price_level->head;
+                            orders = tmp->data.price_level->head;
                             // Ордер который был в стакане закрыт
                         } else {
                             printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, 'S', orders->value->oid, n->oid, orders->value->qty, orders->value->price);
@@ -198,9 +217,9 @@ int main()
                         }
                     }
                     if(tmp->data.price_level->size == 0) {
-                        PriceData pcdatatest = tmp->data;
+//                        PriceData pcdatatest = tmp->data;
                         deleteNode(&sell_glass, tmp);
-                        deb_check_node(sell_glass, pcdatatest);
+//                        deb_check_node(sell_glass, pcdatatest);
                     }
                     if(n->qty != 0) {
                         tmp = sell_glass;
@@ -213,7 +232,7 @@ int main()
                 if(n->qty != 0) {
                     insertNodeOID(&oidstore, (OID){n->oid, n->price, n->side});
                     insertNode(&bye_glass, *n);
-                    deb_check_node(bye_glass, *n);
+//                    deb_check_node(bye_glass, *n);
                 }
             } else {
                 // Ордер на продажу S
@@ -250,9 +269,9 @@ int main()
                         }
                     }
                     if(tmp->data.price_level->size == 0) {
-                        PriceData pcdatatest = tmp->data;
+//                        PriceData pcdatatest = tmp->data;
                         deleteNode(&bye_glass, tmp);
-                        deb_check_node(bye_glass, pcdatatest);
+//                        deb_check_node(bye_glass, pcdatatest);
                     }
                     if(n->qty != 0) {
                         tmp = bye_glass;
@@ -265,38 +284,43 @@ int main()
                 if(n->qty != 0) {
                     insertNodeOID(&oidstore, (OID){n->oid, n->price, n->side});
                     insertNode(&sell_glass, *n);
-                    deb_check_node(sell_glass, *n);
+//                    deb_check_node(sell_glass, *n);
                 }
             }
 
         } else if(c_type == 'C') {
             NodeOID *noid = findNodeOID(&oidstore, (OID){n->oid});
             if(noid == NILOID || noid == NULL) {
-                printf("not found oid\n");
+                //printf("not found oid\n");
                 continue;
             } else
                 printf("X,%d\n", noid->data.oid);
 
             fflush(stdout);
             if(noid->data.side == 'B') {
-                travers_chack_node(bye_glass);
+//                travers_chack_node(bye_glass);
                 cancle_order(&bye_glass, noid);
                 //if(counter == 4189)
-                travers_chack_node(bye_glass);
+//                travers_chack_node(bye_glass);
             } else {
                 cancle_order(&sell_glass, noid);
-                if(counter == 4189)
-                    travers_chack_node(sell_glass);
+//                if(counter == 4189)
+//                    travers_chack_node(sell_glass);
             }
             //printCountOID(oidstore);
             deleteNodeOID(&oidstore, noid);
             //printCountOID(oidstore);
         }
         fflush(stdout);
-        test(bye_glass, sell_glass);
+        //test(bye_glass, sell_glass);
         counter++;
         //n = (PriceData*)malloc(sizeof (PriceData));
     }
+
+    printf("\n");
+    printf("sum orders oid=%d\n", SumTreeRecursOID(oidstore));
+    printf("sum orders bye=%d\n", SumTreeRecurs(bye_glass));
+    printf("sum orders sell=%d\n", SumTreeRecurs(sell_glass));
 
     int bye_max = 0;
     int sell_max = 0;
@@ -309,7 +333,7 @@ int main()
     Node *ntest = NIL;
     ntest = findNode(&bye_glass, *p);
     if(ntest != NULL)
-        printf("%f\n",ntest->data.price);
+        printf("found: %f\n",ntest->data.price);
     printf("\nMax_bye=%d\tmax_sell=%d \nEnd of file!\n", bye_max, sell_max);
     printf("max_height_oid=%d\n", oid_max);
     fclose(in);
