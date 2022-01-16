@@ -30,6 +30,14 @@ void heightTree(Node* tree, int lvl, int* max) {
     return;
 }
 
+void deb_check_node(Node* tree, PriceData price_data) {
+    Node *test = findNode(&tree, price_data);
+    if(test != NULL) {
+        if(test->data.price_level->head == NULL)
+            printf("stop");
+    }
+}
+
 
 int SumTreeRecurs(NodeOID* tree) {
     if (tree == NILOID)
@@ -52,29 +60,35 @@ int cancle_order(Node **glass, NodeOID *noid){
         fflush(stdout);
         return 0;
     }
-    OrderLevel *ol = node_to_cncl->data.price_level->head;
-    if(ol != NULL && ol->value->oid == noid->data.oid) {
-        OrderLevel *tmp = ol;
-        ol = ol->next;
-        free(tmp->value);
-        node_to_cncl->data.price_level->size--;
-    } else {
-        while(ol->next != NULL) {
-            if(ol->next->value->oid == noid->data.oid)
-                break;
-            ol = ol->next;
-        }
-        if(ol->next == NULL) {
-            printf("Error: OrderLevel %f not contain oid=%d for delete\n", noid->data.price, noid->data.oid );
-        } else {
-            OrderLevel *tmp = ol->next;
-            ol->next = ol->next->next;
-            free(tmp->value);
-            node_to_cncl->data.price_level->size--;
-        }
-    }
-    if(node_to_cncl->data.price_level->size == 0)
+
+    deb_check_node(node, price_data);
+    delete_oid(node_to_cncl->data.price_level, noid->data.oid);
+
+//    OrderLevel *ol = node_to_cncl->data.price_level->head;
+//    if(ol != NULL && ol->value->oid == noid->data.oid) {
+//        OrderLevel *tmp = ol;
+//        ol = ol->next;
+//        free(tmp->value);
+//        node_to_cncl->data.price_level->size--;
+//    } else {
+//        while(ol->next != NULL) {
+//            if(ol->next->value->oid == noid->data.oid)
+//                break;
+//            ol = ol->next;
+//        }
+//        if(ol->next == NULL) {
+//            printf("Error: OrderLevel %f not contain oid=%d for delete\n", noid->data.price, noid->data.oid );
+//        } else {
+//            OrderLevel *tmp = ol->next;
+//            ol->next = ol->next->next;
+//            free(tmp->value);
+//            node_to_cncl->data.price_level->size--;
+//        }
+//    }
+    if(node_to_cncl->data.price_level->size == 0) {
         deleteNode(&node, node_to_cncl);
+        deb_check_node(node, price_data);
+    }
     *glass = node;
     return 0;
 }
@@ -146,6 +160,7 @@ int main()
                     }
                     if(tmp->data.price_level->size == 0) {
                         deleteNode(&sell_glass, tmp);
+                        deb_check_node(sell_glass, tmp->data);
                     }
                     if(n->qty != 0) {
                         tmp = sell_glass;
@@ -191,6 +206,7 @@ int main()
                     }
                     if(tmp->data.price_level->size == 0) {
                         deleteNode(&bye_glass, tmp);
+                        deb_check_node(bye_glass, tmp->data);
                     }
                     if(n->qty != 0) {
                         tmp = bye_glass;

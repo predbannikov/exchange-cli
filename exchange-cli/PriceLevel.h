@@ -63,10 +63,41 @@ Order* pop_front(PriceLevel *list) {
     if (list->tail == tmp) {
         list->tail = NULL;
     }
+    free(tmp->value);
     free(tmp);
     list->size--;
 
     return value;
+}
+
+void delete_oid(PriceLevel *list, unsigned oid) {
+    OrderLevel *ol = list->head;
+    if(ol == NULL) {
+        printf("stop");
+        return;
+    }
+    if (ol->value->oid == oid) {
+        pop_front(list);
+        return;
+    } else {
+        while(ol->next != NULL) {
+            if(ol->next->value->oid == oid)
+                break;
+            ol = ol->next;
+        }
+        if(ol->next == NULL) {
+            printf("Error: OrderLevel not contain oid=%d for delete\n", oid );
+        } else {
+            OrderLevel *tmp = ol->next;
+            ol->next = ol->next->next;
+            free(tmp->value);
+            free(tmp);
+            if(list->tail == tmp) {
+                list->tail = ol;
+            }
+            list->size--;
+        }
+    }
 }
 
 void fun(Order *ord) {
