@@ -35,8 +35,6 @@ void push_back(PriceLevel *list, Order *value) {
         printf("error malloc:");
         exit(EXIT_FAILURE);
     }
-//    if(list->size > 0)
-//        printf("stop");
 
     tmp->next = NULL;
     tmp->value = value;
@@ -45,11 +43,8 @@ void push_back(PriceLevel *list, Order *value) {
     if (list->head == NULL) {
         list->head = tmp;
     }
-    //if(list->tail == NULL)
         list->tail = tmp;
     list->size++;
-//    if(list->size == 2 && list->head->next == NULL)
-//        printf("stop");
 }
 
 Order* pop_front(PriceLevel *list) {
@@ -58,7 +53,6 @@ Order* pop_front(PriceLevel *list) {
     if (list->head == NULL) {
         printf("error:");
     }
-
     tmp = list->head;
     value = tmp->value;
     list->head = list->head->next;
@@ -68,60 +62,29 @@ Order* pop_front(PriceLevel *list) {
     free(tmp->value);
     free(tmp);
     list->size--;
-
     return value;
 }
 
 void delete_oid(PriceLevel *list, unsigned oid) {
-    static int counter = 0;
-    counter++;
-//    if(counter == 105)
-//        printf("stop");
     OrderLevel *ol = list->head;
-    if(ol == NULL) {
-        printf("stop");
-        return;
-    }
     if (ol->value->oid == oid) {
         pop_front(list);
-        //return;
     } else {
         while(ol->next != NULL) {
             if(ol->next->value->oid == oid)
                 break;
             ol = ol->next;
         }
-        if(ol->next == NULL) {
-            //printf("Error: OrderLevel not contain oid=%d for delete\n", oid );
-        } else {
+        if(ol->next != NULL) {
             OrderLevel *tmp = ol->next;
             ol->next = ol->next->next;
             if(list->tail == tmp) {
                 list->tail = ol;
-                //list->tail = tmp->next;	// TODO ol or ol->next
             }
             free(tmp->value);
             free(tmp);
             list->size--;
         }
-    }
-    if(list->size == 1 && list->head != list->tail)
-        printf("stop");
-}
-
-void fun(Order *ord) {
-    printf("price=%f\tnumber=%d\t\tqty=%d", ord->price, ord->oid, ord->qty);
-}
-
-void printList(PriceLevel *list) {
-    if(list->size > 1)
-        printf("");
-    OrderLevel *iter = list->head;
-    while (iter) {
-        fun(iter->value);
-        iter = iter->next;
-        printf("\n");
-        fflush(stdout);
     }
 }
 

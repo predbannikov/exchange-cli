@@ -103,40 +103,19 @@ void printCountOID(NodeOID* tree) {
 int cancle_order(Node **glass, NodeOID *noid){
     static int counter = 0;
     Node* node = *glass;
-    //travers_chack_head_tail_eq(node);
-    //travers_chack_node(node);
     PriceData price_data = {noid->data.price};
     Node *node_to_cncl = findNode(&node, price_data);
     if(node_to_cncl == NULL) {
-//        printf("Error: Node not contain price_level=%f for this oid=%d\n", noid->data.price, noid->data.oid);
-//        fflush(stdout);
         return 0;
     }
-    //travers_chack_node(node);
-    //deb_check_node(node, price_data);
-
-    //travers_chack_node(node);
-
-    //PriceLevel pclvl = *node_to_cncl->data.price_level;
-    //delete_oid(&pclvl, noid->data.oid);
-//    if(counter == 104)
-//        printf("stop");
-//    if(counter == 280)
-//        printf("stop");
-    //travers_chack_head_tail_eq(node);
     delete_oid(node_to_cncl->data.price_level, noid->data.oid);
-
-    //travers_chack_node(node);
-
     if(node_to_cncl->data.price_level->size == 0) {
         deleteNode(&node, node_to_cncl);
         deb_check_node(node, price_data);
     }
     fflush(stdout);
-    //travers_chack_node(node);
     *glass = node;
     counter++;
-    //travers_chack_head_tail_eq(node);
     return 0;
 }
 
@@ -156,7 +135,6 @@ unsigned int trade_id = 1;
 
 int matching(Node** glass, PriceData *n, NodeOID **oidstr) {
     Node* tmp = extr_elem(*glass, n->side);
-    NodeOID *oidstore = *oidstr;
     char side = n->side == 'B' ? 'S' : 'B';
 
     while(tmp != NIL && n->qty != 0) {	// Если есть покупатели то выполняем сделки
@@ -177,12 +155,14 @@ int matching(Node** glass, PriceData *n, NodeOID **oidstr) {
             } else if(orders->value->qty < n->qty) {
                 n->qty -= orders->value->qty;
                 printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, orders->value->price);
-                insertNodeOID(&oidstore, (OID){orders->value->oid, n->price, orders->value->side});
+                NodeOID *oid = findNodeOID(oidstr,(OID){orders->value->oid});
+                deleteNodeOID(oidstr, oid);
                 pop_front(tmp->data.price_level);
                 orders = tmp->data.price_level->head;
             } else {
                 printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, orders->value->price);
-                insertNodeOID(&oidstore, (OID){orders->value->oid, n->price, orders->value->side});
+                NodeOID *oid = findNodeOID(oidstr,(OID){orders->value->oid});
+                deleteNodeOID(oidstr, oid);
                 pop_front(tmp->data.price_level);
                 orders = tmp->data.price_level->head;
                 n->qty = 0;
@@ -190,11 +170,8 @@ int matching(Node** glass, PriceData *n, NodeOID **oidstr) {
         }
         if(tmp->data.price_level->size == 0)
             deleteNode(glass, tmp);
-        if(n->qty != 0) {
+        if(n->qty != 0)
             tmp = extr_elem(*glass, n->side);
-            if(tmp == NIL)
-                break;
-        }
     }
     return 0;
 }
@@ -213,7 +190,6 @@ int main()
     int qty = 0;
     float price = 0.;
 
-    //unsigned int trade_id = 1;
     Node* bye_glass = NIL;
     Node* sell_glass = NIL;
     NodeOID* oidstore = NILOID;
@@ -225,7 +201,6 @@ int main()
             continue;
         PriceData *n = NULL;
         n = (PriceData*)malloc(sizeof (PriceData));
-
         n->price = price;
         n->oid = oid;
         n->qty = qty;
@@ -259,7 +234,6 @@ int main()
             }
             deleteNodeOID(&oidstore, noid);
         }
-        fflush(stdout);
         counter++;
     }
 

@@ -15,8 +15,8 @@ typedef struct NodeOID_ {
     struct NodeOID_ *left;         /* left child */
     struct NodeOID_ *right;        /* right child */
     struct NodeOID_ *parent;       /* parent */
-    nodeColor color;            /* node color (BLACK, RED) */
-    OID data;                     /* data stored in node */
+    nodeColor color;               /* node color (BLACK, RED) */
+    OID data;                      /* data stored in node */
 } NodeOID;
 
 int cmpLTOID(OID a, OID b) {
