@@ -140,6 +140,65 @@ int cancle_order(Node **glass, NodeOID *noid){
     return 0;
 }
 
+Node* extr_elem(Node* tree, char side) {
+    Node *tmp = tree;
+    if(side == 'B') {
+        while(tmp->left != NIL)
+            tmp = tmp->left;
+    } else {
+        while(tmp->right != NIL)
+            tmp = tmp->right;
+    }
+    return tmp;
+}
+
+unsigned int trade_id = 1;
+
+int matching(Node** glass, PriceData *n, NodeOID **oidstr) {
+    Node* tmp = extr_elem(*glass, n->side);
+    NodeOID *oidstore = *oidstr;
+    char side = n->side == 'B' ? 'S' : 'B';
+
+    while(tmp != NIL && n->qty != 0) {	// Если есть покупатели то выполняем сделки
+        if(n->side == 'B') {
+            if(tmp->data.price > n->price)
+                break;
+        } else {
+            if(tmp->data.price < n->price)
+                break;
+        }
+        OrderLevel *orders = tmp->data.price_level->head;			// Получаем первый в очереди ордер на покупку
+        while(orders != NULL) {				// Обходим очередь или выход из цикла по break
+            if(orders->value->qty > n->qty) {
+                orders->value->qty -= n->qty;
+                printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, side, orders->value->oid, n->oid, n->qty, orders->value->price);
+                n->qty = 0;
+                break;
+            } else if(orders->value->qty < n->qty) {
+                n->qty -= orders->value->qty;
+                printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, orders->value->price);
+                insertNodeOID(&oidstore, (OID){orders->value->oid, n->price, orders->value->side});
+                pop_front(tmp->data.price_level);
+                orders = tmp->data.price_level->head;
+            } else {
+                printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, orders->value->price);
+                insertNodeOID(&oidstore, (OID){orders->value->oid, n->price, orders->value->side});
+                pop_front(tmp->data.price_level);
+                orders = tmp->data.price_level->head;
+                n->qty = 0;
+            }
+        }
+        if(tmp->data.price_level->size == 0)
+            deleteNode(glass, tmp);
+        if(n->qty != 0) {
+            tmp = extr_elem(*glass, n->side);
+            if(tmp == NIL)
+                break;
+        }
+    }
+    return 0;
+}
+
 int main()
 {
     FILE *in = fopen("input.txt", "rt");
@@ -154,20 +213,16 @@ int main()
     int qty = 0;
     float price = 0.;
 
-    unsigned int trade_id = 1;
+    //unsigned int trade_id = 1;
     Node* bye_glass = NIL;
     Node* sell_glass = NIL;
     NodeOID* oidstore = NILOID;
-
 
     int counter = 0;
     int counter_args = 0;
     while((counter_args = fscanf(in, "%c,%d,%c,%d,%f", &c_type, &oid, &c_side, &qty, &price)) != EOF) {
         if(counter_args == 1)
             continue;
-        test(bye_glass, sell_glass);
-//        if(counter == 22)
-//            break;
         PriceData *n = NULL;
         n = (PriceData*)malloc(sizeof (PriceData));
 
@@ -175,119 +230,20 @@ int main()
         n->oid = oid;
         n->qty = qty;
         n->side = c_side;
-//        printf("%d ", counter);
-//        if(counter == 4189)
-//            printf("stop");
         if(c_type == 'O') {
             if(n->side == 'B') {
-                Node* tmp = sell_glass;
-                while(tmp->left != NIL)
-                    tmp = tmp->left;
-//                if(counter == 291)
-//                    printf("stop");
-                while(tmp->data.price <= n->price && tmp != NIL && n->qty != 0) {	// Если есть покупатели то выполняем сделки
-                    OrderLevel *orders = tmp->data.price_level->head;			// Получаем первый в очереди ордер на покупку
-                    while(orders != NULL) {				// Обходим очередь или выход из цикла по break
-                        if(orders->value->qty > n->qty) {
-                            // Ордер который прилетел закрыт
-                            orders->value->qty -= n->qty;
-                            printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, 'S', orders->value->oid, n->oid, n->qty, orders->value->price);
-                            n->qty = 0;
-                            break;
-                        } else if(orders->value->qty < n->qty) {
-                            n->qty -= orders->value->qty;
-                            printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, 'S', orders->value->oid, n->oid, orders->value->qty, orders->value->price);
-                            insertNodeOID(&oidstore, (OID){orders->value->oid, n->price, orders->value->side});
-                            //if(counter == 14)
-                            //    printf("stop\n");
-                            //PriceData pcdatatest = tmp->data;
-                            pop_front(tmp->data.price_level);
-                            //deb_check_node(sell_glass, pcdatatest);
-                            orders = tmp->data.price_level->head;
-                            // Ордер который был в стакане закрыт
-                        } else {
-                            printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, 'S', orders->value->oid, n->oid, orders->value->qty, orders->value->price);
-                            insertNodeOID(&oidstore, (OID){orders->value->oid, n->price, orders->value->side});
-                            //PriceData pcdatatest = tmp->data;
-                            pop_front(tmp->data.price_level);
-                            //deb_check_node(sell_glass, pcdatatest);
-                            orders = tmp->data.price_level->head;
-                            n->qty = 0;
-                            // Оба ордера закрыты
-                        }
-                    }
-                    if(tmp->data.price_level->size == 0) {
-//                        PriceData pcdatatest = tmp->data;
-                        deleteNode(&sell_glass, tmp);
-//                        deb_check_node(sell_glass, pcdatatest);
-                    }
-                    if(n->qty != 0) {
-                        tmp = sell_glass;
-                        while(tmp->left != NIL)
-                            tmp = tmp->left;
-                        if(tmp == NIL)
-                            break;
-                    }
-                }
+                matching(&sell_glass, n, &oidstore);
                 if(n->qty != 0) {
                     insertNodeOID(&oidstore, (OID){n->oid, n->price, n->side});
                     insertNode(&bye_glass, *n);
-//                    deb_check_node(bye_glass, *n);
                 }
             } else {
-                // Ордер на продажу S
-                Node* tmp = bye_glass;	// самая высокая цена на покупку
-                while(tmp->right != NIL)
-                    tmp = tmp->right;
-                while(tmp->data.price >= n->price && tmp != NIL && n->qty != 0) {	// Если есть покупатели то выполняем сделки
-                    OrderLevel *orders = tmp->data.price_level->head;	// Получаем первый в очереди ордер на покупку
-                    while(orders != NULL) {	// Обходим очередь или выход из цикла по break
-                        if(orders->value->qty > n->qty) {
-                            // Ордер который прилетел закрыт
-                            orders->value->qty -= n->qty;
-                            printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, 'B', orders->value->oid, n->oid, n->qty, orders->value->price);
-                            n->qty = 0;
-                            break;
-                        } else if(orders->value->qty < n->qty) {
-                            n->qty -= orders->value->qty;
-                            printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, 'B', orders->value->oid, n->oid, orders->value->qty, orders->value->price);
-                            insertNodeOID(&oidstore, (OID){orders->value->oid, n->price, orders->value->side});
-//                            PriceData pcdatatest = tmp->data;
-                            pop_front(tmp->data.price_level);
-//                            deb_check_node(bye_glass, pcdatatest);
-                            orders = tmp->data.price_level->head;
-                            // Ордер который был в стакане закрыт
-                        } else {
-                            printf("T,%u,%c,%d,%d,%d,%.2f\n", trade_id++, 'B', orders->value->oid, n->oid, orders->value->qty, orders->value->price);
-                            insertNodeOID(&oidstore, (OID){orders->value->oid + 2, n->price, orders->value->side});
-//                            PriceData pcdatatest = tmp->data;
-                            pop_front(tmp->data.price_level);
-//                            deb_check_node(bye_glass, pcdatatest);
-                            orders = tmp->data.price_level->head;
-                            n->qty = 0;
-                            // Оба ордера закрыты
-                        }
-                    }
-                    if(tmp->data.price_level->size == 0) {
-//                        PriceData pcdatatest = tmp->data;
-                        deleteNode(&bye_glass, tmp);
-//                        deb_check_node(bye_glass, pcdatatest);
-                    }
-                    if(n->qty != 0) {
-                        tmp = bye_glass;
-                        while(tmp->right != NIL)
-                            tmp = tmp->right;
-                        if(tmp == NIL)
-                            break;
-                    }
-                }
+                matching(&bye_glass, n, &oidstore);
                 if(n->qty != 0) {
                     insertNodeOID(&oidstore, (OID){n->oid, n->price, n->side});
                     insertNode(&sell_glass, *n);
-//                    deb_check_node(sell_glass, *n);
                 }
             }
-
         } else if(c_type == 'C') {
             NodeOID *noid = findNodeOID(&oidstore, (OID){n->oid});
             if(noid == NILOID || noid == NULL) {
@@ -296,25 +252,15 @@ int main()
             } else
                 printf("X,%d\n", noid->data.oid);
 
-            fflush(stdout);
             if(noid->data.side == 'B') {
-//                travers_chack_node(bye_glass);
                 cancle_order(&bye_glass, noid);
-                //if(counter == 4189)
-//                travers_chack_node(bye_glass);
             } else {
                 cancle_order(&sell_glass, noid);
-//                if(counter == 4189)
-//                    travers_chack_node(sell_glass);
             }
-            //printCountOID(oidstore);
             deleteNodeOID(&oidstore, noid);
-            //printCountOID(oidstore);
         }
         fflush(stdout);
-        //test(bye_glass, sell_glass);
         counter++;
-        //n = (PriceData*)malloc(sizeof (PriceData));
     }
 
     printf("\n");
