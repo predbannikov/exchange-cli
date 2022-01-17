@@ -7,8 +7,8 @@
 typedef struct Order_ {
     unsigned int oid;
     unsigned int qty;
-    char side;
     float price;
+    char side;
 } Order;
 
 typedef struct OrderLevel_ {
@@ -65,7 +65,7 @@ Order* pop_front(PriceLevel *list) {
     return value;
 }
 
-void delete_oid(PriceLevel *list, unsigned oid) {
+void delete_Nth_of_oid(PriceLevel *list, unsigned oid) {
     OrderLevel *ol = list->head;
     if (ol->value->oid == oid) {
         pop_front(list);

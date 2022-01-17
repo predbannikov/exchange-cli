@@ -10,7 +10,7 @@
 void free_nodes(Node* tree) {
     static int counter = 0;
     while(tree != NIL) {
-        PriceLevel* price_level = tree->data.price_level;
+        PriceLevel* price_level = tree->price_level;
         OrderLevel* orders = price_level->head;
         while(orders != NULL) {
             OrderLevel *tmp = orders;
@@ -137,8 +137,8 @@ int cancle_order(Node **glass, NodeOID *noid){
     if(node_to_cncl == NULL) {
         return 0;
     }
-    delete_oid(node_to_cncl->data.price_level, noid->data.oid);
-    if(node_to_cncl->data.price_level->size == 0) {
+    delete_Nth_of_oid(node_to_cncl->price_level, noid->data.oid);
+    if(node_to_cncl->price_level->size == 0) {
         deleteNode(&node, node_to_cncl);
         //deb_check_node(node, price_data);
     }
@@ -204,13 +204,13 @@ int matching(Node** glass, Order *n, NodeOID **oidstr) {
 
     while(tmp != NIL && n->qty != 0) {	// Если есть покупатели то выполняем сделки
         if(n->side == 'B') {
-            if(tmp->data.price_level->head->value->price > n->price)
+            if(tmp->price_level->head->value->price > n->price)
                 break;
         } else {
-            if(tmp->data.price_level->head->value->price < n->price)
+            if(tmp->price_level->head->value->price < n->price)
                 break;
         }
-        OrderLevel *orders = tmp->data.price_level->head;			// Получаем первый в очереди ордер на покупку
+        OrderLevel *orders = tmp->price_level->head;			// Получаем первый в очереди ордер на покупку
         while(orders != NULL) {				// Обходим очередь или выход из цикла по break
             if(orders->value->qty > n->qty) {
                 orders->value->qty -= n->qty;
@@ -239,8 +239,8 @@ int matching(Node** glass, Order *n, NodeOID **oidstr) {
                     printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, left_dgt, right_dgt);
                 NodeOID *oid = findNodeOID(oidstr,(OID){orders->value->oid});
                 deleteNodeOID(oidstr, oid);
-                pop_front(tmp->data.price_level);
-                orders = tmp->data.price_level->head;
+                pop_front(tmp->price_level);
+                orders = tmp->price_level->head;
             } else {
 //                sprintf(fdgt_str,"%.2f", orders->value->price);
 //                morphNumericString(fdgt_str, 2);
@@ -253,12 +253,12 @@ int matching(Node** glass, Order *n, NodeOID **oidstr) {
 //               printf("T,%u,%c,%d,%d,%d,%s\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, fdgt_str);
                 NodeOID *oid = findNodeOID(oidstr,(OID){orders->value->oid});
                 deleteNodeOID(oidstr, oid);
-                pop_front(tmp->data.price_level);
-                orders = tmp->data.price_level->head;
+                pop_front(tmp->price_level);
+                orders = tmp->price_level->head;
                 n->qty = 0;
             }
         }
-        if(tmp->data.price_level->size == 0)
+        if(tmp->price_level->size == 0)
             deleteNode(glass, tmp);
         if(n->qty != 0)
             tmp = extr_elem(*glass, n->side);
