@@ -1,9 +1,37 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "Node.h"
 #include "oidstore.h"
 //#include "hashtable.h"
 
+
+
+void free_nodes(Node* tree) {
+    static int counter = 0;
+    while(tree != NIL) {
+        PriceLevel* price_level = tree->data.price_level;
+        OrderLevel* orders = price_level->head;
+        while(orders != NULL) {
+            OrderLevel *tmp = orders;
+            orders = orders->next;
+            free(tmp->value);
+            free(tmp);
+            counter++;
+        }
+        deleteNode(&tree, tree);
+    }
+    printf("free %d nodes\n", counter);
+}
+
+void free_oidstore(NodeOID* tree) {
+    static int counter = 0;
+    while(tree != NILOID) {
+        deleteNodeOID(&tree, tree);
+        counter++;
+    }
+    printf("free %d oidstores\n", counter);
+}
 
 void heightTreeOid(NodeOID* tree, int lvl, int* max) {
     if (*max < lvl)
@@ -16,7 +44,6 @@ void heightTreeOid(NodeOID* tree, int lvl, int* max) {
     }
     return;
 }
-
 
 void heightTree(Node* tree, int lvl, int* max) {
     if (*max < lvl)
@@ -70,6 +97,7 @@ void test(Node* t1, Node *t2) {
     travers_chack_head_tail_eq(t1);
     travers_chack_head_tail_eq(t2);
 }
+
 int SumTreeRecursOID(NodeOID* tree) {
     if (tree == NILOID)
         return 0;
@@ -94,6 +122,7 @@ int SumTreeRecurs(Node* tree) {
     int right = SumTreeRecurs(tree->right);
     return left + right + value;
 }
+
 void printCountOID(NodeOID* tree) {
     int sum = SumTreeRecurs(tree);
     printf("count=%d\n", sum);
@@ -237,35 +266,66 @@ int matching(Node** glass, PriceData *n, NodeOID **oidstr) {
     return 0;
 }
 
-int main()
+int main(int argc, char **argv)
 {
-    FILE *in = fopen("input.txt", "rt");
+    if(argc > 1 && argc < 3)
+        printf("%d: %s\n", argc, argv[0]);
+    fflush(stdout);
+    FILE *in = fopen(argv[1], "rt");
     if(in == NULL )
     {
-        printf("Error openning file!\n");
+        printf("Error openning file [%s]!\n", argv[1]);
         exit(EXIT_FAILURE);
     }
+
+//    char sss[100];
+//    if(freopen(NULL, "rt", stdin)) {
+//        fread(sss, 100, 1, stdin);
+//        printf("succ\n%s", sss);
+//        fflush(stdout);
+//            }
+
+//    int fd[2], result;
+//    if(pipe(fd) < 0) {
+//        printf("Can't create pipe\n");
+//        exit(EXIT_FAILURE);
+//    }
+
+//    result = fork();
+//    if(result) {
+//        printf("Can't fork child\n");
+//        exit(EXIT_FAILURE);
+//    } else if(result > 0) {
+
+//    } else {
+
+//    }
+//    read(fd[0], sss, 1);
+
+//    printf("%s\n", sss);
+//    exit(EXIT_FAILURE);
+
     char c_type;
-    int oid = 0;
-    char c_side;
-    int qty = 0;
-    float price = 0.;
+//    int oid = 0;
+//    char c_side;
+//    int qty = 0;
+//    float price = 0.;
 
     Node* bye_glass = NIL;
     Node* sell_glass = NIL;
     NodeOID* oidstore = NILOID;
+    PriceData *n = NULL;
+    n = (PriceData*)malloc(sizeof (PriceData));
 
     int counter = 0;
     int counter_args = 0;
-    while((counter_args = fscanf(in, "%c,%d,%c,%d,%f", &c_type, &oid, &c_side, &qty, &price)) != EOF) {
+    while((counter_args = fscanf(in, "%c,%d,%c,%d,%f", &c_type, &n->oid, &n->side, &n->qty, &n->price)) != EOF) {
         if(counter_args == 1)
             continue;
-        PriceData *n = NULL;
-        n = (PriceData*)malloc(sizeof (PriceData));
-        n->price = price;
-        n->oid = oid;
-        n->qty = qty;
-        n->side = c_side;
+//        n->price = price;
+//        n->oid = oid;
+//        n->qty = qty;
+//        n->side = c_side;
         if(c_type == 'O') {
             if(n->side == 'B') {
                 matching(&sell_glass, n, &oidstore);
@@ -296,13 +356,18 @@ int main()
             deleteNodeOID(&oidstore, noid);
         }
         counter++;
+        n = (PriceData*)malloc(sizeof (PriceData));
     }
+    free(n);
     fclose(in);
+    printf("\n");
+    printf("sum orders oid=%d\n", SumTreeRecursOID(oidstore));
+    printf("sum orders bye=%d\n", SumTreeRecurs(bye_glass));
+    printf("sum orders sell=%d\n", SumTreeRecurs(sell_glass));
 
-//    printf("\n");
-//    printf("sum orders oid=%d\n", SumTreeRecursOID(oidstore));
-//    printf("sum orders bye=%d\n", SumTreeRecurs(bye_glass));
-//    printf("sum orders sell=%d\n", SumTreeRecurs(sell_glass));
+    free_nodes(bye_glass);
+    free_nodes(sell_glass);
+    free_oidstore(oidstore);
 
 //    int bye_max = 0;
 //    int sell_max = 0;

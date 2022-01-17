@@ -305,7 +305,7 @@ void deleteNodeOID(NodeOID** tree, NodeOID *z) {
     if (y->color == BLACK)
         deleteFixupOID (&root, x);
 
-    free (y);
+    free(y);
     *tree = root;
 }
 

@@ -111,7 +111,6 @@ void insertFixup(Node** glass_tree, Node *x) {
 
     Node* root = *glass_tree;
 
-
     /* check Red-Black properties */
     while (x != root && x->parent->color == RED) {
         /* we have a violation */
@@ -334,7 +333,8 @@ void deleteNode(Node** glass_tree, Node *z) {
     if (y->color == BLACK)
         deleteFixup (&root, x);
 
-    free (y);
+    //free(y->data.price_level);
+    free(y);
     *glass_tree = root;
 }
 
