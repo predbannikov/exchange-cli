@@ -17,10 +17,10 @@
 typedef enum { BLACK, RED } nodeColor;
 
 typedef struct PriceData_ {
-    float price;
-    unsigned int qty;
-    int oid;
-    char side;
+//    float price;
+//    unsigned int qty;
+//    int oid;
+//    char side;
     PriceLevel *price_level;
 } PriceData;
 
@@ -32,12 +32,12 @@ typedef struct Node_ {
     PriceData data;             /* data stored in node */
 } Node;
 
-int cmpLT(PriceData a, PriceData b) {
-    return a.price < b.price;
+int cmpLT(float a, float b) {
+    return a < b;
 }
 
-int cmpEQ(PriceData a, PriceData b) {
-    return fabsf(a.price - b.price) <= EPS;
+int cmpEQ(float a, float b) {
+    return fabsf(a - b) <= EPS;
 }
 
 #define NIL &sentinel           /* all leafs are sentinels */
@@ -168,7 +168,7 @@ void insertFixup(Node** glass_tree, Node *x) {
 /***********************************************
  *  allocate node for data and insert in tree  *
  ***********************************************/
-Node *insertNode(Node** glass_tree, PriceData data) {
+Node *insertNode(Node** glass_tree, Order *ord) {
     static int counter = 0;
     counter++;
     Node* current, *parent, *x;
@@ -178,18 +178,18 @@ Node *insertNode(Node** glass_tree, PriceData data) {
     current = root;
     parent = 0;
     while (current != NIL) {
-        if (cmpEQ(data, current->data)) {
-            Order *ord = (Order*)malloc(sizeof (Order));
-            ord->oid = data.oid;
-            ord->qty = data.qty;
-            ord->side = data.side;
-            ord->price = data.price;
+        if (cmpEQ(ord->price, current->data.price_level->head->value->price)) {
+//            Order *ord = (Order*)malloc(sizeof (Order));
+//            ord->oid = data->oid;
+//            ord->qty = data->qty;
+//            ord->side = data->side;
+//            ord->price = data->price;
 
             push_back(current->data.price_level, ord);
             return (current);
         }
         parent = current;
-        current = cmpLT(data, current->data) ?
+        current = cmpLT(ord->price, current->data.price_level->head->value->price) ?
             current->left : current->right;
     }
 
@@ -198,16 +198,17 @@ Node *insertNode(Node** glass_tree, PriceData data) {
         printf ("insufficient memory (insertNode)\n");
         exit(1);
     }
-    Order *ord = (Order*)malloc(sizeof (Order));
-    ord->oid = data.oid;
-    ord->qty = data.qty;
-    ord->side = data.side;
-    ord->price = data.price;
-    data.price_level = createLinkedList();
-    push_back(data.price_level, ord);
+//    Order *ord = (Order*)malloc(sizeof (Order));
+//    ord->oid = data->oid;
+//    ord->qty = data->qty;
+//    ord->side = data->side;
+//    ord->price = data->price;
+//    PriceData *data = (PriceData*) malloc(sizeof(PriceData));
+    x->data.price_level = createLinkedList();
+    push_back(x->data.price_level, ord);
 
 
-    x->data = data;
+    //x->data = data;
     x->parent = parent;
     x->left = NIL;
     x->right = NIL;
@@ -215,7 +216,7 @@ Node *insertNode(Node** glass_tree, PriceData data) {
 
     /* insert node in tree */
     if(parent) {
-        if(cmpLT(data, parent->data))
+        if(cmpLT(ord->price, parent->data.price_level->head->value->price))
             parent->left = x;
         else
             parent->right = x;
@@ -341,13 +342,13 @@ void deleteNode(Node** glass_tree, Node *z) {
 /*******************************
  *  find node containing data  *
  *******************************/
-Node *findNode(Node** glass_tree, PriceData data) {
+Node *findNode(Node** glass_tree, float price) {
     Node *current = *glass_tree;
     while(current != NIL)
-        if(cmpEQ(data, current->data))
+        if(cmpEQ(price, current->data.price_level->head->value->price))
             return (current);
         else
-            current = cmpLT (data, current->data) ?
+            current = cmpLT (price, current->data.price_level->head->value->price) ?
                 current->left : current->right;
     return(0);
 }
