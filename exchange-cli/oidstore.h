@@ -1,13 +1,17 @@
 #ifndef OIDSTORE_H
 #define OIDSTORE_H
 
+//#include <stdio.h>
+//#include <stdlib.h>
 #include "Node.h"
+
 
 typedef struct OID_ {
     unsigned oid;
     float price;
     char side;
 } OID;
+
 
 //typedef enum { BLACK, RED } nodeColor;
 

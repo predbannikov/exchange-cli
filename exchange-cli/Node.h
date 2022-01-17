@@ -4,25 +4,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
 #include <math.h>
 #include "PriceLevel.h"
 
 
 #define EPS 0.0001
 
-
 /* Red-Black tree description */
 typedef enum { BLACK, RED } nodeColor;
-
-//typedef struct PriceData_ {
-////    float price;
-////    unsigned int qty;
-////    int oid;
-////    char side;
-//    PriceLevel *price_level;
-//} PriceData;
 
 typedef struct Node_ {
     struct Node_ *left;         /* left child */
@@ -180,11 +169,6 @@ Node *insertNode(Node** glass_tree, Order *ord) {
     parent = 0;
     while (current != NIL) {
         if (cmpEQ(ord->price, current->price_level->head->value->price)) {
-//            Order *ord = (Order*)malloc(sizeof (Order));
-//            ord->oid = data->oid;
-//            ord->qty = data->qty;
-//            ord->side = data->side;
-//            ord->price = data->price;
 
             push_back(current->price_level, ord);
             return (current);
@@ -199,21 +183,13 @@ Node *insertNode(Node** glass_tree, Order *ord) {
         printf ("insufficient memory (insertNode)\n");
         exit(1);
     }
-//    Order *ord = (Order*)malloc(sizeof (Order));
-//    ord->oid = data->oid;
-//    ord->qty = data->qty;
-//    ord->side = data->side;
-//    ord->price = data->price;
-//    PriceData *data = (PriceData*) malloc(sizeof(PriceData));
-    x->price_level = createLinkedList();
-    push_back(x->price_level, ord);
 
-
-    //x->data = data;
     x->parent = parent;
     x->left = NIL;
     x->right = NIL;
     x->color = RED;
+    x->price_level = createLinkedList();
+    push_back(x->price_level, ord);
 
     /* insert node in tree */
     if(parent) {

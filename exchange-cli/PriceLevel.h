@@ -65,7 +65,7 @@ Order* pop_front(PriceLevel *list) {
     return value;
 }
 
-void delete_Nth_of_oid(PriceLevel *list, unsigned oid) {
+void delete_Nth_of_oid(PriceLevel *list, unsigned int oid) {
     OrderLevel *ol = list->head;
     if (ol->value->oid == oid) {
         pop_front(list);

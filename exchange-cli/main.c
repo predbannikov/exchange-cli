@@ -8,7 +8,6 @@
 
 
 void free_nodes(Node* tree) {
-    static int counter = 0;
     while(tree != NIL) {
         PriceLevel* price_level = tree->price_level;
         OrderLevel* orders = price_level->head;
@@ -17,45 +16,39 @@ void free_nodes(Node* tree) {
             orders = orders->next;
             free(tmp->value);
             free(tmp);
-            counter++;
         }
         deleteNode(&tree, tree);
     }
-    printf("free %d nodes\n", counter);
 }
 
 void free_oidstore(NodeOID* tree) {
-    static int counter = 0;
-    while(tree != NILOID) {
+    while(tree != NILOID)
         deleteNodeOID(&tree, tree);
-        counter++;
-    }
-    printf("free %d oidstores\n", counter);
 }
 
-void heightTreeOid(NodeOID* tree, int lvl, int* max) {
-    if (*max < lvl)
-        *max = lvl;
-    if (tree->left != NILOID) {
-        heightTreeOid(tree->left, lvl + 1, max);
-    }
-    if (tree->right != NILOID) {
-        heightTreeOid(tree->right, lvl + 1, max);
-    }
-    return;
-}
+//void heightTreeOid(NodeOID* tree, int lvl, int* max) {
+//    if (*max < lvl)
+//        *max = lvl;
+//    if (tree->left != NILOID) {
+//        heightTreeOid(tree->left, lvl + 1, max);
+//    }
+//    if (tree->right != NILOID) {
+//        heightTreeOid(tree->right, lvl + 1, max);
+//    }
+//    return;
+//}
 
-void heightTree(Node* tree, int lvl, int* max) {
-    if (*max < lvl)
-        *max = lvl;
-    if (tree->left != NIL) {
-        heightTree(tree->left, lvl + 1, max);
-    }
-    if (tree->right != NIL) {
-        heightTree(tree->right, lvl + 1, max);
-    }
-    return;
-}
+//void heightTree(Node* tree, int lvl, int* max) {
+//    if (*max < lvl)
+//        *max = lvl;
+//    if (tree->left != NIL) {
+//        heightTree(tree->left, lvl + 1, max);
+//    }
+//    if (tree->right != NIL) {
+//        heightTree(tree->right, lvl + 1, max);
+//    }
+//    return;
+//}
 
 //void deb_check_node(Node* tree, PriceData price_data) {
 //    Node *test = findNode(&tree, &price_data);
@@ -132,7 +125,6 @@ void heightTree(Node* tree, int lvl, int* max) {
 int cancle_order(Node **glass, NodeOID *noid){
     static int counter = 0;
     Node* node = *glass;
-//    PriceData price_data = {noid->data.price};
     Node *node_to_cncl = findNode(&node, noid->data.price);
     if(node_to_cncl == NULL) {
         return 0;
@@ -140,7 +132,6 @@ int cancle_order(Node **glass, NodeOID *noid){
     delete_Nth_of_oid(node_to_cncl->price_level, noid->data.oid);
     if(node_to_cncl->price_level->size == 0) {
         deleteNode(&node, node_to_cncl);
-        //deb_check_node(node, price_data);
     }
     //fflush(stdout);
     *glass = node;
@@ -170,74 +161,74 @@ float macheps(void)
     return e;
 }
 
-void morphNumericString (char *s, int n) {
-    char *p;
-    int count;
+//void morphNumericString (char *s, int n) {
+//    char *p;
+//    int count;
 
-    p = strchr (s,'.');         // Find decimal point, if any.
-    if (p != NULL) {
-        count = n;              // Adjust for more or less decimals.
-        while (count >= 0) {    // Maximum decimals allowed.
-             count--;
-             if (*p == '\0')    // If there's less than desired.
-                 break;
-             p++;               // Next character.
-        }
+//    p = strchr (s,'.');         // Find decimal point, if any.
+//    if (p != NULL) {
+//        count = n;              // Adjust for more or less decimals.
+//        while (count >= 0) {    // Maximum decimals allowed.
+//             count--;
+//             if (*p == '\0')    // If there's less than desired.
+//                 break;
+//             p++;               // Next character.
+//        }
 
-        *p-- = '\0';            // Truncate string.
-        while (*p == '0')       // Remove trailing zeros.
-            *p-- = '\0';
+//        *p-- = '\0';            // Truncate string.
+//        while (*p == '0')       // Remove trailing zeros.
+//            *p-- = '\0';
 
-        if (*p == '.') {        // If all decimals were zeros, remove ".".
-            *p = '\0';
-        }
-    }
-}
+//        if (*p == '.') {        // If all decimals were zeros, remove ".".
+//            *p = '\0';
+//        }
+//    }
+//}
 
-char fdgt_str[7];	//
+//char fdgt_str[7];	//
 int left_dgt;
 int right_dgt;
 
-int matching(Node** glass, Order *n, NodeOID **oidstr) {
-    Node* tmp = extr_elem(*glass, n->side);
-    char side = n->side == 'B' ? 'S' : 'B';
+void matching(Node** glass, Order *order, NodeOID **oidstr) {
+    Node* tmp = extr_elem(*glass, order->side);
+    char side = order->side == 'B' ? 'S' : 'B';
 
-    while(tmp != NIL && n->qty != 0) {	// Если есть покупатели то выполняем сделки
-        if(n->side == 'B') {
-            if(tmp->price_level->head->value->price > n->price)
+    while(tmp != NIL && order->qty != 0) {	// Если есть покупатели то выполняем сделки
+        if(order->side == 'B') {
+            if(tmp->price_level->head->value->price > order->price)
                 break;
         } else {
-            if(tmp->price_level->head->value->price < n->price)
+            if(tmp->price_level->head->value->price < order->price)
                 break;
         }
         OrderLevel *orders = tmp->price_level->head;			// Получаем первый в очереди ордер на покупку
         while(orders != NULL) {				// Обходим очередь или выход из цикла по break
-            if(orders->value->qty > n->qty) {
-                orders->value->qty -= n->qty;
+            if(orders->value->qty > order->qty) {
+                orders->value->qty -= order->qty;
 //                sprintf(fdgt_str,"%.2f", orders->value->price);
 //                morphNumericString(fdgt_str, 2);
 
                 left_dgt = (int) orders->value->price + 0.005;
                 right_dgt = (int)((orders->value->price - left_dgt + 0.005) * 100);
                 if(right_dgt %10 == 0)
-                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, n->oid, n->qty, left_dgt, right_dgt/10);
+                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, order->oid, order->qty, left_dgt, right_dgt/10);
                 else
-                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, n->oid, n->qty, left_dgt, right_dgt);
+                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, order->oid, order->qty, left_dgt, right_dgt);
 
 
-                n->qty = 0;
+                order->qty = 0;
                 break;
-            } else if(orders->value->qty < n->qty) {
-                n->qty -= orders->value->qty;
+            } else if(orders->value->qty < order->qty) {
+                order->qty -= orders->value->qty;
 //                sprintf(fdgt_str,"%.2f", orders->value->price);
 //                morphNumericString(fdgt_str, 2);
                 left_dgt = (int) orders->value->price + 0.005;
                 right_dgt = (int)((orders->value->price - left_dgt + 0.005) * 100);
                 if(right_dgt % 10 == 0)
-                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, left_dgt, right_dgt/10);
+                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, order->oid, orders->value->qty, left_dgt, right_dgt/10);
                 else
-                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, left_dgt, right_dgt);
-                NodeOID *oid = findNodeOID(oidstr,(OID){orders->value->oid});
+                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, order->oid, orders->value->qty, left_dgt, right_dgt);
+                NodeOID *oid = findNodeOID(oidstr,(OID){orders->value->oid, 0, 0});
                 deleteNodeOID(oidstr, oid);
                 pop_front(tmp->price_level);
                 orders = tmp->price_level->head;
@@ -247,101 +238,52 @@ int matching(Node** glass, Order *n, NodeOID **oidstr) {
                 left_dgt = (int) orders->value->price + 0.005;
                 right_dgt = (int)((orders->value->price - left_dgt + 0.005) * 100);
                 if(right_dgt % 10 == 0)
-                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, left_dgt, right_dgt/10);
+                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, order->oid, orders->value->qty, left_dgt, right_dgt/10);
                 else
-                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, left_dgt, right_dgt);
+                    printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, order->oid, orders->value->qty, left_dgt, right_dgt);
 //               printf("T,%u,%c,%d,%d,%d,%s\n", trade_id++, side, orders->value->oid, n->oid, orders->value->qty, fdgt_str);
-                NodeOID *oid = findNodeOID(oidstr,(OID){orders->value->oid});
+                NodeOID *oid = findNodeOID(oidstr,(OID){orders->value->oid, 0, 0});
                 deleteNodeOID(oidstr, oid);
                 pop_front(tmp->price_level);
                 orders = tmp->price_level->head;
-                n->qty = 0;
+                order->qty = 0;
             }
         }
         if(tmp->price_level->size == 0)
             deleteNode(glass, tmp);
-        if(n->qty != 0)
-            tmp = extr_elem(*glass, n->side);
+        if(order->qty != 0)
+            tmp = extr_elem(*glass, order->side);
     }
-    return 0;
 }
 
-int main(int argc, char **argv)
-{
-    if(argc > 1 && argc < 3)
-        printf("%d: %s\n", argc, argv[0]);
-    fflush(stdout);
-    FILE *in = fopen(argv[1], "rt");
-    if(in == NULL )
-    {
-        printf("Error openning file [%s]!\n", argv[1]);
-        exit(EXIT_FAILURE);
-    }
-
-//    char sss[100];
-//    if(freopen(NULL, "rt", stdin)) {
-//        fread(sss, 100, 1, stdin);
-//        printf("succ\n%s", sss);
-//        fflush(stdout);
-//            }
-
-//    int fd[2], result;
-//    if(pipe(fd) < 0) {
-//        printf("Can't create pipe\n");
-//        exit(EXIT_FAILURE);
-//    }
-
-//    result = fork();
-//    if(result) {
-//        printf("Can't fork child\n");
-//        exit(EXIT_FAILURE);
-//    } else if(result > 0) {
-
-//    } else {
-
-//    }
-//    read(fd[0], sss, 1);
-
-//    printf("%s\n", sss);
-//    exit(EXIT_FAILURE);
-
+void exchange(FILE *in) {
     char c_type;
-//    int oid = 0;
-//    char c_side;
-//    int qty = 0;
-//    float price = 0.;
-
     Node* bye_glass = NIL;
     Node* sell_glass = NIL;
     NodeOID* oidstore = NILOID;
-    Order *n = NULL;
-    n = (Order*)malloc(sizeof (Order));
-
+    Order *order = NULL;
+    order = (Order*)malloc(sizeof (Order));
     int counter = 0;
     int counter_args = 0;
-    while((counter_args = fscanf(in, "%c,%d,%c,%d,%f", &c_type, &n->oid, &n->side, &n->qty, &n->price)) != EOF) {
+    while((counter_args = fscanf(in, "%c,%d,%c,%d,%f", &c_type, &order->oid, &order->side, &order->qty, &order->price)) != EOF) {
         if(counter_args == 1)
             continue;
-//        n->price = price;
-//        n->oid = oid;
-//        n->qty = qty;
-//        n->side = c_side;
         if(c_type == 'O') {
-            if(n->side == 'B') {
-                matching(&sell_glass, n, &oidstore);
-                if(n->qty != 0) {
-                    insertNodeOID(&oidstore, (OID){n->oid, n->price, n->side});
-                    insertNode(&bye_glass, n);
+            if(order->side == 'B') {
+                matching(&sell_glass, order, &oidstore);
+                if(order->qty != 0) {
+                    insertNodeOID(&oidstore, (OID){order->oid, order->price, order->side});
+                    insertNode(&bye_glass, order);
                 }
             } else {
-                matching(&bye_glass, n, &oidstore);
-                if(n->qty != 0) {
-                    insertNodeOID(&oidstore, (OID){n->oid, n->price, n->side});
-                    insertNode(&sell_glass, n);
+                matching(&bye_glass, order, &oidstore);
+                if(order->qty != 0) {
+                    insertNodeOID(&oidstore, (OID){order->oid, order->price, order->side});
+                    insertNode(&sell_glass, order);
                 }
             }
         } else if(c_type == 'C') {
-            NodeOID *noid = findNodeOID(&oidstore, (OID){n->oid});
+            NodeOID *noid = findNodeOID(&oidstore, (OID){order->oid, 0, 0});
             if(noid == NILOID || noid == NULL) {
                 //printf("not found oid\n");
                 continue;
@@ -356,34 +298,32 @@ int main(int argc, char **argv)
             deleteNodeOID(&oidstore, noid);
         }
         counter++;
-        n = (Order*)malloc(sizeof (Order));
+        order = (Order*)malloc(sizeof (Order));
     }
-    free(n);
-    fclose(in);
-//    printf("\n");
-//    printf("sum orders oid=%d\n", SumTreeRecursOID(oidstore));
-//    printf("sum orders bye=%d\n", SumTreeRecurs(bye_glass));
-//    printf("sum orders sell=%d\n", SumTreeRecurs(sell_glass));
-
+    free(order);
     free_nodes(bye_glass);
     free_nodes(sell_glass);
     free_oidstore(oidstore);
+}
 
-//    int bye_max = 0;
-//    int sell_max = 0;
-//    int oid_max = 0;
-//    heightTree(bye_glass, 0, &bye_max);
-//    heightTree(sell_glass, 0, &sell_max);
-//    heightTreeOid(oidstore, 0, &oid_max);
-//    PriceData *p = (PriceData*)malloc(sizeof(PriceData));
-//    p->price = 250.61;
-//    Node *ntest = NIL;
-//    ntest = findNode(&bye_glass, *p);
-//    if(ntest != NULL)
-//        printf("found: %f\n",ntest->data.price);
-//    printf("\nMax_bye=%d\tmax_sell=%d \nEnd of file!\n", bye_max, sell_max);
-//    printf("max_height_oid=%d\n", oid_max);
-    //printf("diff: end of file\n");
-
-    return 0;
+int main(int argc, char **argv)
+{
+    FILE *in;
+    if(argc > 1 && argc < 3) {
+        in = fopen(argv[1], "rt");
+        if(in == NULL )
+        {
+            printf("Error openning file <%s>.\n", argv[1]);
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        printf("Missing argument <input_file>.\n");
+        exit(EXIT_FAILURE);
+    }
+    for(int i = 0; i < 10; i++) {
+        fseek(in, 0, SEEK_SET);
+        exchange(in);
+    }
+    fclose(in);
+    return EXIT_SUCCESS;
 }
