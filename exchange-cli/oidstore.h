@@ -316,7 +316,8 @@ void deleteNodeOID(NodeOID** tree, NodeOID *z) {
 /*******************************
  *  find node containing data  *
  *******************************/
-NodeOID *findNodeOID(NodeOID** tree, OID data) {
+NodeOID *findNodeOID(NodeOID** tree, unsigned int oid) {
+    OID data = {oid, 0, 0};
     NodeOID *current = *tree;
     while(current != NILOID)
         if(cmpEQOID(data, current->data))

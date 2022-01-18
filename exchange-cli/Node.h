@@ -18,8 +18,7 @@ typedef struct Node_ {
     struct Node_ *right;        /* right child */
     struct Node_ *parent;       /* parent */
     nodeColor color;            /* node color (BLACK, RED) */
-    //PriceData data;             /* data stored in node */
-    PriceLevel *price_level;
+    PriceLevel *price_level;   	/* data stored in node */
 } Node;
 
 int cmpLT(float a, float b) {
@@ -276,6 +275,8 @@ void deleteFixup(Node** glass_tree, Node *x) {
 void deleteNode(Node** glass_tree, Node *z) {
     Node *x, *y;
     Node* root = *glass_tree;
+
+    /* remove data price_level from this node z */
     free(z->price_level);
 
     if (!z || z == NIL) return;
