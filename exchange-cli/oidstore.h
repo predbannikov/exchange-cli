@@ -5,6 +5,8 @@
 //#include <stdlib.h>
 #include "Node.h"
 
+#define cmpLTOID(a,b) (a < b)
+#define cmpEQOID(a,b) (a == b)
 
 typedef struct OID_ {
     unsigned oid;
@@ -23,13 +25,13 @@ typedef struct NodeOID_ {
     OID data;                      /* data stored in node */
 } NodeOID;
 
-int cmpLTOID(OID a, OID b) {
-    return a.oid < b.oid;
-}
+//int cmpLTOID(OID a, OID b) {
+//    return a.oid < b.oid;
+//}
 
-int cmpEQOID(OID a, OID b) {
-    return a.oid == b.oid;
-}
+//int cmpEQOID(OID a, OID b) {
+//    return a.oid == b.oid;
+//}
 
 
 #define NILOID &sentineloid           /* all leafs are sentinels */
@@ -169,11 +171,11 @@ NodeOID *insertNodeOID(NodeOID** tree, OID data) {
     current = root;
     parent = 0;
     while (current != NILOID) {
-        if (cmpEQOID(data, current->data)) {
+        if (cmpEQOID(data.oid, current->data.oid)) {
             return (current);
         }
         parent = current;
-        current = cmpLTOID(data, current->data) ?
+        current = cmpLTOID(data.oid, current->data.oid) ?
             current->left : current->right;
     }
 
@@ -191,7 +193,7 @@ NodeOID *insertNodeOID(NodeOID** tree, OID data) {
 
     /* insert node in tree */
     if(parent) {
-        if(cmpLTOID(data, parent->data))
+        if(cmpLTOID(data.oid, parent->data.oid))
             parent->left = x;
         else
             parent->right = x;
@@ -317,13 +319,13 @@ void deleteNodeOID(NodeOID** tree, NodeOID *z) {
  *  find node containing data  *
  *******************************/
 NodeOID *findNodeOID(NodeOID** tree, unsigned int oid) {
-    OID data = {oid, 0, 0};
+    //OID data = {oid, 0, 0};
     NodeOID *current = *tree;
     while(current != NILOID)
-        if(cmpEQOID(data, current->data))
+        if(cmpEQOID(oid, current->data.oid))
             return (current);
         else
-            current = cmpLTOID (data, current->data) ?
+            current = cmpLTOID (oid, current->data.oid) ?
                 current->left : current->right;
     return(0);
 }
