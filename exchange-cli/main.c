@@ -19,9 +19,9 @@ char shift_dgt = '0';
 void free_nodes(Node* tree) {
     while(tree != NIL) {
         PriceLevel* price_level = tree->price_level;
-        OrderLevel* orders = price_level->head;
+        OrderLinkList* orders = price_level->head;
         while(orders != NULL) {
-            OrderLevel *tmp = orders;
+            OrderLinkList *tmp = orders;
             orders = orders->next;
             free(tmp->value);
             free(tmp);
@@ -136,7 +136,7 @@ void matching(Node** glass, Order *order, NodeOID **oidstr) {
             if(border_elem->price_level->head->value->price < order->price)
                 break;
         }
-        OrderLevel *orders = border_elem->price_level->head;			// Получаем первый в очереди ордер на покупку
+        OrderLinkList *orders = border_elem->price_level->head;			// Получаем первый в очереди ордер на покупку
         while(orders != NULL) {											// Обходим очередь или выход из цикла по break
             if(orders->value->qty > order->qty) {
                 orders->value->qty -= order->qty;
