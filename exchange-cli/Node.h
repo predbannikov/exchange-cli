@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+//#include <math.h>
 #include "PriceLevel.h"
 
 
@@ -21,13 +21,11 @@ typedef struct Node_ {
     PriceLevel *price_level;   	/* data stored in node */
 } Node;
 
-int cmpLT(float a, float b) {
-    return a < b;
-}
+#define ABS(x) ((x) < 0 ? - (x) : (x))
 
-int cmpEQ(float a, float b) {
-    return fabsf(a - b) <= EPS;
-}
+#define cmpLT(a, b) (a < b)
+
+#define cmpEQ(a, b) (ABS(a - b) <= EPS)
 
 #define NIL &sentinel           /* all leafs are sentinels */
 Node sentinel = { NIL, NIL, 0, BLACK, 0};
@@ -169,7 +167,7 @@ Node *insertNode(Node** glass_tree, Order *ord) {
     while (current != NIL) {
         if (cmpEQ(ord->price, current->price_level->head->value->price)) {
 
-            push_back(current->price_level, ord);
+            push_back_list(current->price_level, ord);
             return (current);
         }
         parent = current;
@@ -179,8 +177,8 @@ Node *insertNode(Node** glass_tree, Order *ord) {
 
     /* setup new node */
     if ((x = malloc (sizeof(Node))) == 0) {
-        printf ("insufficient memory (insertNode)\n");
-        exit(1);
+        fprintf (stderr, "error: insufficient memory (insertNode)\n");
+        exit(EXIT_FAILURE);
     }
 
     x->parent = parent;
@@ -188,7 +186,7 @@ Node *insertNode(Node** glass_tree, Order *ord) {
     x->right = NIL;
     x->color = RED;
     x->price_level = createLinkedList();
-    push_back(x->price_level, ord);
+    push_back_list(x->price_level, ord);
 
     /* insert node in tree */
     if(parent) {

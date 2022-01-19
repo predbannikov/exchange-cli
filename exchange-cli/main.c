@@ -110,7 +110,6 @@ void print_trade(unsigned int oid, unsigned int oid2, unsigned int qty, char sid
         putc(buffer[j], out);
 
     putc('\n', out);
-    //            fwrite(&buffer[0], 1, size, out);
 }
 
 void print_cancle(unsigned int oid) {
@@ -170,7 +169,7 @@ void matching(Node** glass, Order *order, NodeOID **oidstr) {
                 NodeOID *oid = findNodeOID(oidstr, orders->value->oid);
                 deleteNodeOID(oidstr, oid);
 
-                pop_front(border_elem->price_level);
+                pop_front_list(border_elem->price_level);
                 orders = border_elem->price_level->head;
             } else {
 
@@ -186,7 +185,7 @@ void matching(Node** glass, Order *order, NodeOID **oidstr) {
 #endif
                 NodeOID *oid = findNodeOID(oidstr, orders->value->oid);
                 deleteNodeOID(oidstr, oid);
-                pop_front(border_elem->price_level);
+                pop_front_list(border_elem->price_level);
                 orders = border_elem->price_level->head;
                 order->qty = 0;
             }

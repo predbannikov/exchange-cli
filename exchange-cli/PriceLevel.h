@@ -29,10 +29,10 @@ PriceLevel* createLinkedList() {
     return tmp;
 }
 
-void push_back(PriceLevel *list, Order *value) {
+void push_back_list(PriceLevel *list, Order *value) {
     OrderLevel *tmp = (OrderLevel*) malloc(sizeof(OrderLevel));
     if (tmp == NULL) {
-        printf("error malloc:");
+        fprintf(stderr, "error: insufficient memory (push_back_list)\n");
         exit(EXIT_FAILURE);
     }
 
@@ -47,11 +47,11 @@ void push_back(PriceLevel *list, Order *value) {
     list->size++;
 }
 
-Order* pop_front(PriceLevel *list) {
+Order* pop_front_list(PriceLevel *list) {
     OrderLevel *tmp = NULL;
     Order *value = NULL;
     if (list->head == NULL) {
-        printf("error:");
+        fprintf(stderr, "error: (pop_front_list)");
     }
     tmp = list->head;
     value = tmp->value;
@@ -68,7 +68,7 @@ Order* pop_front(PriceLevel *list) {
 void delete_Nth_of_oid(PriceLevel *list, unsigned int oid) {
     OrderLevel *ol = list->head;
     if (ol->value->oid == oid) {
-        pop_front(list);
+        pop_front_list(list);
     } else {
         while(ol->next != NULL) {
             if(ol->next->value->oid == oid)

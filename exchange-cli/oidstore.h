@@ -25,15 +25,6 @@ typedef struct NodeOID_ {
     OID data;                      /* data stored in node */
 } NodeOID;
 
-//int cmpLTOID(OID a, OID b) {
-//    return a.oid < b.oid;
-//}
-
-//int cmpEQOID(OID a, OID b) {
-//    return a.oid == b.oid;
-//}
-
-
 #define NILOID &sentineloid           /* all leafs are sentinels */
 NodeOID sentineloid = { NILOID, NILOID, 0, BLACK, 0};
 
@@ -181,8 +172,8 @@ NodeOID *insertNodeOID(NodeOID** tree, OID data) {
 
     /* setup new node */
     if ((x = (NodeOID*) malloc (sizeof(*x))) == 0) {
-        printf ("insufficient memory (insertNodeOID)\n");
-        exit(1);
+        fprintf (stderr, "error: insufficient memory (insertNodeOID)\n");
+        exit(EXIT_FAILURE);
     }
 
     x->data = data;
@@ -319,7 +310,6 @@ void deleteNodeOID(NodeOID** tree, NodeOID *z) {
  *  find node containing data  *
  *******************************/
 NodeOID *findNodeOID(NodeOID** tree, unsigned int oid) {
-    //OID data = {oid, 0, 0};
     NodeOID *current = *tree;
     while(current != NILOID)
         if(cmpEQOID(oid, current->data.oid))
