@@ -6,4 +6,4 @@ project(exchange-cli LANGUAGES C)
 
 #set(CMAKE_C_FLAGS_RELEASE "-O2")
 
-add_executable(exchange-cli main.c Node.h PriceLevel.h)
+add_executable(exchange-cli main.c node.h pricelevel.h)
