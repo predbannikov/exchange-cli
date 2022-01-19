@@ -7,7 +7,7 @@
  * вывода информации в файл                        *
  * *************************************************/
 #define CUSTOM_PRINT
-/* тест на чтение с буфера и обработка алгоритмом */
+/* тест на чтение с буфера и обработка алгоритмом в цикле */
 //#define TEST_CYCLE	1000
 
 unsigned int trade_id = 1;
@@ -20,8 +20,11 @@ int tmp = 0;
 FILE *in = NULL, *out = NULL;
 
 /* состояния для парсинга входящей строки аналог get_args */
-enum {STATE_START, STATE_OID, STATE_SIDE, STATE_QTY, STATE_PRICE_LEFT, STATE_PRICE_RIGHT } state_parser = STATE_START;
+
+typedef enum {STATE_START, STATE_OID, STATE_SIDE, STATE_QTY, STATE_PRICE_LEFT, STATE_PRICE_RIGHT } STATE_PARSER;
 enum {STATE_ORDER, STATE_CANCLE} state_ticket = STATE_ORDER;
+
+STATE_PARSER state_parser = STATE_START;
 
 /* парсинг входящей строки */
 void get_args(unsigned int *oid, char *side, unsigned int *qty, float *price) {
@@ -34,7 +37,7 @@ void get_args(unsigned int *oid, char *side, unsigned int *qty, float *price) {
     case STATE_ORDER:
         while((ch = getc(in)) != EOF && ch != '\n') {
             if(ch == ',') {
-                state_parser++;
+                state_parser =  (STATE_PARSER) ((int)state_parser + 1);
                 continue;
             }
             switch (state_parser) {

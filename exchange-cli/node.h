@@ -175,7 +175,7 @@ Node *insertNode(Node** glass_tree, Order *ord) {
             current->left : current->right;
     }
 
-    if ((x = malloc (sizeof(Node))) == 0) {
+    if ((x = (Node*)malloc (sizeof(Node))) == 0) {
         fprintf (stderr, "error: insufficient memory (insertNode)\n");
         exit(EXIT_FAILURE);
     }
