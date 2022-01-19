@@ -3,10 +3,15 @@
 #include "Node.h"
 #include "oidstore.h"
 
+#define CUSTOM_PRINT
 
 unsigned int trade_id = 1;
 int left_dgt;
 int right_dgt;
+char buffer[100];
+int size;
+int tmp;
+FILE *out;
 
 enum {STATE_START, STATE_OID, STATE_SIDE, STATE_QTY, STATE_PRICE, STATE_PRICE2, STATE_END} state_parser = STATE_START;
 enum {STATE_ORDER, STATE_CANCLE} state_ticket = STATE_ORDER;
@@ -58,12 +63,74 @@ Node* extr_elem(Node* tree, char side) {
     return tmp;
 }
 
+void print_trade(unsigned int oid, unsigned int oid2, unsigned int qty, char side, float price) {
+    left_dgt = (int) price + 0.005;
+    right_dgt = (int)((price - left_dgt + 0.005) * 100);
+    if(right_dgt % 10 == 0)
+        right_dgt /= 10;
+    size = 0;
+
+    do {
+        buffer[size++] = right_dgt % 10 + '0';
+    } while ((right_dgt /= 10) > 0);
+    buffer[size++] = '.';
+
+    do {
+        buffer[size++] = left_dgt % 10 + '0';
+    } while ((left_dgt /= 10) > 0);
+    buffer[size++] = ',';
+
+    do {
+        buffer[size++] = qty % 10 + '0';
+    } while ((qty /= 10) > 0);
+
+    buffer[size++] = ',';
+    do {
+        buffer[size++] = oid2 % 10 + '0';
+    } while ((oid2 /= 10) > 0);
+    buffer[size++] = ',';
+
+    do {
+        buffer[size++] = oid % 10 + '0';
+    } while ((oid /= 10) > 0);
+
+    buffer[size++] = ',';
+    buffer[size++] = side;
+
+    buffer[size++] = ',';
+    tmp = trade_id++;
+    do {
+        buffer[size++] = tmp % 10 + '0';
+    } while ((tmp /= 10) > 0);
+
+    putc('T', out);
+    putc(',', out);
+
+    for(int j = size - 1; j >= 0; j--)
+        putc(buffer[j], out);
+
+    putc('\n', out);
+    //            fwrite(&buffer[0], 1, size, out);
+}
+
+void print_cancle(unsigned int oid) {
+    size = 0;
+    putc('X', out);
+    putc(',', out);
+    do {
+        buffer[size++] = oid % 10 + '0';
+    } while ((oid /= 10) > 0);
+    for(int j = size - 1; j >= 0; j--)
+        putc(buffer[j], out);
+   putc('\n', out);
+}
+
 void matching(Node** glass, Order *order, NodeOID **oidstr) {
 
     Node* border_elem = extr_elem(*glass, order->side);
     char side = order->side == 'B' ? 'S' : 'B';
 
-    while(border_elem != NIL && order->qty != 0) {	// Если есть покупатели то выполняем сделки
+    while(border_elem != NIL && order->qty != 0) {						// Если есть покупатели то выполняем сделки
         if(order->side == 'B') {
             if(border_elem->price_level->head->value->price > order->price)
                 break;
@@ -72,29 +139,34 @@ void matching(Node** glass, Order *order, NodeOID **oidstr) {
                 break;
         }
         OrderLevel *orders = border_elem->price_level->head;			// Получаем первый в очереди ордер на покупку
-        while(orders != NULL) {				// Обходим очередь или выход из цикла по break
+        while(orders != NULL) {											// Обходим очередь или выход из цикла по break
             if(orders->value->qty > order->qty) {
                 orders->value->qty -= order->qty;
-
+#ifdef CUSTOM_PRINT
+                print_trade(orders->value->oid, order->oid, order->qty, side, orders->value->price);
+#else
                 left_dgt = (int) orders->value->price + 0.005;
                 right_dgt = (int)((orders->value->price - left_dgt + 0.005) * 100);
                 if(right_dgt %10 == 0)
                     printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, order->oid, order->qty, left_dgt, right_dgt/10);
                 else
                     printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, order->oid, order->qty, left_dgt, right_dgt);
+#endif
 
                 order->qty = 0;
                 break;
             } else if(orders->value->qty < order->qty) {
                 order->qty -= orders->value->qty;
-
+#ifdef CUSTOM_PRINT
+                print_trade(orders->value->oid, order->oid, orders->value->qty, side, orders->value->price);
+#else
                 left_dgt = (int) orders->value->price + 0.005;
                 right_dgt = (int)((orders->value->price - left_dgt + 0.005) * 100);
                 if(right_dgt % 10 == 0)
                     printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, order->oid, orders->value->qty, left_dgt, right_dgt/10);
                 else
                     printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, order->oid, orders->value->qty, left_dgt, right_dgt);
-
+#endif
                 NodeOID *oid = findNodeOID(oidstr, orders->value->oid);
                 deleteNodeOID(oidstr, oid);
 
@@ -102,13 +174,16 @@ void matching(Node** glass, Order *order, NodeOID **oidstr) {
                 orders = border_elem->price_level->head;
             } else {
 
+#ifdef CUSTOM_PRINT
+                print_trade(orders->value->oid, order->oid, orders->value->qty, side, orders->value->price);
+#else
                 left_dgt = (int) orders->value->price + 0.005;
                 right_dgt = (int)((orders->value->price - left_dgt + 0.005) * 100);
                 if(right_dgt % 10 == 0)
                     printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, order->oid, orders->value->qty, left_dgt, right_dgt/10);
                 else
                     printf("T,%u,%c,%d,%d,%d,%d.%d\n", trade_id++, side, orders->value->oid, order->oid, orders->value->qty, left_dgt, right_dgt);
-
+#endif
                 NodeOID *oid = findNodeOID(oidstr, orders->value->oid);
                 deleteNodeOID(oidstr, oid);
                 pop_front(border_elem->price_level);
@@ -198,7 +273,6 @@ void exchange(FILE *in) {
     NodeOID* oidstore = NILOID;
     Order *order = NULL;
     order = (Order*)malloc(sizeof (Order));
-    int counter_args = 0;
 
     char ch;
 
@@ -209,8 +283,6 @@ void exchange(FILE *in) {
             state_ticket = STATE_CANCLE;
         get_args(&order->oid, &order->side, &order->qty, &order->price, in);
 
-        if(counter_args == 1)
-            continue;
         if(state_ticket == STATE_ORDER) {
             if(order->side == 'B') {
                 matching(&sell_glass, order, &oidstore);
@@ -234,7 +306,12 @@ void exchange(FILE *in) {
             NodeOID *noid = findNodeOID(&oidstore, order->oid);
             if(noid == NULL)
                 continue;
+#ifdef CUSTOM_PRINT
+            print_cancle(noid->data.oid);
+#else
             printf("X,%d\n", noid->data.oid);
+//            fprintf(out, "X,%d\n", noid->data.oid);
+#endif
 
             if(noid->data.side == 'B')
                 cancle_order(&bye_glass, noid);
@@ -245,42 +322,6 @@ void exchange(FILE *in) {
         }
     }
 
-//    while((counter_args = fscanf(in, "%c,%d,%c,%d,%f", &c_type, &order->oid, &order->side, &order->qty, &order->price)) != EOF) {
-//        if(counter_args == 1)
-//            continue;
-//        if(c_type == 'O') {
-//            if(order->side == 'B') {
-//                matching(&sell_glass, order, &oidstore);
-//                if(order->qty != 0) {
-//                    insertNodeOID(&oidstore, (OID){order->oid, order->price, order->side});
-//                    insertNode(&bye_glass, order);
-//                } else {
-//                    free(order);
-//                }
-//            } else {
-//                matching(&bye_glass, order, &oidstore);
-//                if(order->qty != 0) {
-//                    insertNodeOID(&oidstore, (OID){order->oid, order->price, order->side});
-//                    insertNode(&sell_glass, order);
-//                } else {
-//                    free(order);
-//                }
-//            }
-//            order = (Order*)malloc(sizeof (Order));
-//        } else if(c_type == 'C') {
-//            NodeOID *noid = findNodeOID(&oidstore, order->oid);
-//            if(noid == NULL)
-//                continue;
-//            printf("X,%d\n", noid->data.oid);
-
-//            if(noid->data.side == 'B')
-//                cancle_order(&bye_glass, noid);
-//            else
-//                cancle_order(&sell_glass, noid);
-
-//            deleteNodeOID(&oidstore, noid);
-//        }
-//    }
     free(order);
     free_nodes(bye_glass);
     free_nodes(sell_glass);
@@ -293,11 +334,16 @@ int main(int argc, char **argv)
     if(argc > 1 && argc < 3) {
         in = fopen(argv[1], "rt");
         if(in == NULL ) {
-            printf("Error openning file <%s>.\n", argv[1]);
+            fprintf(stderr, "Error openning file to read <%s>.\n", argv[1]);
+            exit(EXIT_FAILURE);
+        }
+        out = fopen("out.txt", "wt");
+        if(out == NULL) {
+            fprintf(stderr, "Error opening file to write out.txt\n");
             exit(EXIT_FAILURE);
         }
     } else {
-        printf("Missing argument <input_file>.\n");
+        fprintf(stderr, "Missing argument <input_file>.\n");
         exit(EXIT_FAILURE);
     }
     for(int i = 0; i < 1; i++) {
@@ -305,5 +351,6 @@ int main(int argc, char **argv)
         exchange(in);
     }
     fclose(in);
+    fclose(out);
     return EXIT_SUCCESS;
 }
