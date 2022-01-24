@@ -1,5 +1,5 @@
 # exchange
-simple exchange matching, matching orders, trade
+simple exchange, matching orders, trade
 
 * input.txt - input dataset
 * output.txt - output dataset
