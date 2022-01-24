@@ -1,5 +1,5 @@
-# exchange-cli
-simple exchange matching
+# exchange
+simple exchange matching, matching orders, trade
 
 * input.txt - input dataset
 * output.txt - output dataset
