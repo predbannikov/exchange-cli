@@ -4,6 +4,14 @@ simple exchange, matching orders, trade
 * input.txt - input dataset
 * output.txt - output dataset
 
+Dependencies:
+Linux, g++, make, libc
+
+Compile:
+Run make in the source folder
+
+Use:
+./exchange input.txt or ./exchange input.txt > out.txt
 
 Биржевой симулятор
 -------------------
